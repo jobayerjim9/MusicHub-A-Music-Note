@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav"
+    app:startDestination="@id/timelineFragment">
+
+
+    <fragment
+        android:id="@+id/timelineFragment"
+        android:name="com.musichub.app.ui.fragments.TimelineFragment"
+        android:label="fragment_timeline"
+        app:enterAnim="@android:anim/slide_in_left"
+        app:exitAnim="@android:anim/slide_out_right"
+        tools:layout="@layout/fragment_timeline" >
+        <action
+            android:id="@+id/action_timelineFragment_to_albumDetailsFragment"
+            app:destination="@id/albumDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/artistsFragment"
+        android:name="com.musichub.app.ui.fragments.ArtistsFragment"
+        android:label="fragment_artists"
+        app:enterAnim="@android:anim/slide_in_left"
+        app:exitAnim="@android:anim/slide_out_right"
+        tools:layout="@layout/fragment_artists" >
+        <action
+            android:id="@+id/action_artistsFragment_to_artistDetailsFragment"
+            app:destination="@id/artistDetailsFragment"
+            app:enterAnim="@anim/nav_default_pop_enter_anim"
+            app:exitAnim="@anim/nav_default_pop_exit_anim"
+            app:launchSingleTop="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="com.musichub.app.ui.fragments.LibraryFragment"
+        android:label="fragment_library"
+        app:enterAnim="@android:anim/slide_in_left"
+        app:exitAnim="@android:anim/slide_out_right"
+        tools:layout="@layout/fragment_library" >
+        <action
+            android:id="@+id/action_libraryFragment_to_albumDetailsFragment"
+            app:destination="@id/albumDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.musichub.app.ui.fragments.SettingsFragment"
+        android:label="fragment_settings"
+        app:enterAnim="@android:anim/slide_in_left"
+        app:exitAnim="@android:anim/slide_out_right"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/artistDetailsFragment"
+        android:name="com.musichub.app.ui.fragments.ArtistDetailsFragment"
+        android:label="fragment_artist_details"
+        tools:layout="@layout/fragment_artist_details" >
+        <argument
+            android:name="name"
+            app:argType="string" />
+        <argument
+            android:name="artistId"
+            app:argType="string" />
+        <argument
+            android:name="image"
+            app:argType="string"
+            app:nullable="true"/>
+        <action
+            android:id="@+id/action_artistDetailsFragment_to_albumDetailsFragment"
+            app:destination="@id/albumDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/albumDetailsFragment"
+        android:name="com.musichub.app.ui.fragments.AlbumDetailsFragment"
+        android:label="fragment_album_details"
+        tools:layout="@layout/fragment_album_details" >
+        <action
+            android:id="@+id/action_albumDetailsFragment_to_trackDetailsFragment"
+            app:destination="@id/trackDetailsFragment" />
+        <argument
+            android:name="albumIten"
+            app:argType="com.musichub.app.models.spotify.AlbumItems" />
+        <argument
+            android:name="artistName"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/trackDetailsFragment"
+        android:name="com.musichub.app.ui.fragments.TrackDetailsFragment"
+        android:label="fragment_track_details"
+        tools:layout="@layout/fragment_track_details" >
+        <argument
+            android:name="name"
+            app:argType="string" />
+        <argument
+            android:name="image"
+            app:argType="string" />
+        <argument
+            android:name="songId"
+            app:argType="string" />
+        <argument
+            android:name="previewUrl"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+</navigation>
