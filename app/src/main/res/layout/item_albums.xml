@@ -66,23 +66,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/textView10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@{album.release_date}"
-                    android:textColor="#B1B1B1"
-                    tools:text="05/03/2021" />
-
                 <androidx.cardview.widget.CardView
                     android:id="@+id/addToLibrary"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginTop="4dp"
+                    android:foreground="?attr/selectableItemBackground"
                     app:cardBackgroundColor="@{cardColor}"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="0dp"
-                    app:contentPadding="4dp">
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="0dp">
 
                     <TextView
                         android:id="@+id/libraryText"
@@ -92,6 +84,15 @@
                         android:textAlignment="center"
                         android:textColor="#001C6A" />
                 </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:id="@+id/textView10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@{album.formattedDate}"
+                    android:textColor="#B1B1B1"
+                    tools:text="05/03/2021" />
 
             </LinearLayout>
 

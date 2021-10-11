@@ -3,6 +3,7 @@ package com.musichub.app.viewmodels
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.common.base.CharMatcher
 import com.google.gson.JsonElement
 import com.musichub.app.helpers.room.AppDatabase
 import com.musichub.app.models.auth.OAuthResponse
@@ -16,6 +17,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
+import java.text.Normalizer
 import javax.inject.Inject
 import kotlin.concurrent.thread
 
@@ -41,27 +43,29 @@ class AlbumViewModel @Inject constructor(private val repo: MusicHubRepositories)
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getAlbumTracks(albumId)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getAlbumTracks(albumId)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -90,27 +94,29 @@ class AlbumViewModel @Inject constructor(private val repo: MusicHubRepositories)
 
                 override fun onError(e: Throwable) {
                     loading.postValue(false)
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    searchTrackAlbum(q,offset)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        searchTrackAlbum(q, offset)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -122,7 +128,9 @@ class AlbumViewModel @Inject constructor(private val repo: MusicHubRepositories)
     }
 
     fun searchTrackOnGenius(term: String,artistName:String) {
-        repo.searchOnGenius("$term $artistName")
+        var finalterm = term.substringBefore("(").trim()
+        finalterm = finalterm.replace(".", "").replace("-", "").replace(";", "").replace("  ", " ")
+        repo.searchOnGenius("$finalterm $artistName")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<JsonElement> {
@@ -131,25 +139,26 @@ class AlbumViewModel @Inject constructor(private val repo: MusicHubRepositories)
                 }
 
                 override fun onSuccess(t: JsonElement) {
-                    var found=false
+                    var found = false
                     var name = ""
                     var artist=""
                     var id=""
                     val hits=t.asJsonObject.getAsJsonObject("response").getAsJsonArray("hits")
-
+                    Log.d("searched", finalterm + "   " + artistName)
                     for (i in 0 until hits.size()) {
-                        val song=hits[i].asJsonObject.getAsJsonObject("result")
-                        name=song?.get("title").toString().replace("\"","")
-                        artist=song.getAsJsonObject("primary_artist").get("name").toString().replace("\"","")
-                        id=song.get("id").toString().replace("\"","")
-
-                        if (name.contains(term) && artist.contains(artistName)) {
-                            found=true
+                        val song = hits[i].asJsonObject.getAsJsonObject("result")
+                        name = song?.get("title").toString().replace("\"", "")
+                        artist = song.getAsJsonObject("primary_artist").get("name").toString()
+                            .replace("\"", "")
+                        id = song.get("id").toString().replace("\"", "")
+                        Log.d("found", name.trim() + " " + artist.trim())
+                        if (artist.lowercase().trim().contains(artistName.lowercase().trim())) {
+                            found = true
                             break
                         }
+
                     }
                     if (found) {
-
                         Log.d("trackOnGenius", "$name $artist")
                         Log.d("trackId", id)
                     }

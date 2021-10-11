@@ -166,4 +166,8 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
 
     }
 
+    override fun onArtistClick(name: String, id: String, image: String) {
+
+    }
+
 }

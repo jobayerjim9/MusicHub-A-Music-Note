@@ -114,7 +114,7 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
                 if (it.found) {
                     val action =
                         AlbumDetailsFragmentDirections.actionAlbumDetailsFragmentToTrackDetailsFragment(
-                            it.name,
+                            trackName,
                             albumItems!!.images!![0].url,
                             it.songId,
                             tracks[currentPosition].preview_url
@@ -169,12 +169,13 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
             binding.libraryText.text = "✔ Library"
         }
     }
+    var trackName: String = ""
     override fun onItemClick(position: Int) {
         if (tracks[position].preview_url!=null) {
             Log.d("trackDetails", "found")
         }
-
-        launched=false
+        trackName = tracks[position].name
+        launched = false
         progress.show()
         currentPosition=position
         viewModel.searchTrackOnGenius(tracks[position].name,tracks[position].artists[0].name)
@@ -185,6 +186,10 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
     }
 
     override fun onRemoveFromLibrary(albumItems: AlbumItems) {
+
+    }
+
+    override fun onArtistClick(name: String, id: String, image: String) {
 
     }
 

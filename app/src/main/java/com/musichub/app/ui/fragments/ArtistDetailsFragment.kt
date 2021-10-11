@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -26,8 +27,12 @@ import com.musichub.app.databinding.FragmentArtistDetailsBinding
 import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.spotify.ArtistShort
 import com.musichub.app.models.spotify.AlbumItems
+import com.musichub.app.models.spotify.SpotifyArtistItem
 import com.musichub.app.viewmodels.ArtistViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.lang.IndexOutOfBoundsException
+import java.util.*
+import kotlin.collections.ArrayList
 
 @AndroidEntryPoint
 class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
@@ -72,8 +77,23 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
             val navHostFragment=requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
             navHostFragment.navController.popBackStack()
         }
-        viewModel.artistBio.observe(viewLifecycleOwner,{
-            binding.bio=it
+        viewModel.artistBio.observe(viewLifecycleOwner, {
+            Log.d("bioFromView", it)
+            if (it.length >= 240) {
+                val shortBio = it.substring(0, 240) + "...<font color=#928F92>(Read More)</font>"
+                binding.bio = shortBio
+            } else {
+                val shortBio = "$it...<font color=#928F92>(Read More)</font>"
+                binding.bio = shortBio
+            }
+            binding.textView7.setOnClickListener { v ->
+                val action =
+                    ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToFullBioFragment2(
+                        args.name,
+                        it.toString()
+                    )
+                navHostFragment.navController.navigate(action)
+            }
         })
         viewModel.artistSocialMedia.observe(viewLifecycleOwner,{
             binding.socialMediaLayout.visibility=View.VISIBLE
@@ -113,27 +133,44 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
             }
         })
         viewModel.isFollowed(args.artistId)
-        viewModel.isFollowed.observe(viewLifecycleOwner,{
+        viewModel.isFollowed.observe(viewLifecycleOwner, {
             if (it) {
                 unfollowState()
 
-            }
-            else {
+            } else {
                 followState()
             }
         })
-        val artist=ArtistShort(args.name,args.artistId,args.image.toString())
-        binding.albumRecycler.layoutManager = LinearLayoutManager(requireContext())
+        val artist = ArtistShort(args.name, args.artistId, args.image.toString())
+        val layoutManager = LinearLayoutManager(requireContext())
+        binding.albumRecycler.layoutManager = layoutManager
+
+        binding.albumRecycler.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                val action = e.action
+                when (action) {
+                    MotionEvent.ACTION_MOVE -> rv.parent.requestDisallowInterceptTouchEvent(true)
+                }
+                return false
+            }
+
+            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+
+            }
+
+            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+
+            }
+
+        })
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                Log.d("adasd",binding.tabLayout.selectedTabPosition.toString())
-                if (binding.tabLayout.selectedTabPosition==0) {
-                    binding.albumRecycler.adapter=albumAdapterAll
-                }
-                else if (binding.tabLayout.selectedTabPosition==1) {
-                    binding.albumRecycler.adapter=albumAdapterSingle
-                }
-                else if (binding.tabLayout.selectedTabPosition==2) {
+                Log.d("adasd", binding.tabLayout.selectedTabPosition.toString())
+                if (binding.tabLayout.selectedTabPosition == 0) {
+                    binding.albumRecycler.adapter = albumAdapterAll
+                } else if (binding.tabLayout.selectedTabPosition == 1) {
+                    binding.albumRecycler.adapter = albumAdapterSingle
+                } else if (binding.tabLayout.selectedTabPosition == 2) {
                     binding.albumRecycler.adapter=albumAdapterAlbum
                 }
                 else if (binding.tabLayout.selectedTabPosition==3) {
@@ -157,42 +194,149 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
         albumAdapterFeatured=AlbumAdapter(requireContext(),albumsFeatured,artist,this)
         viewModel.getAllAlbums(args.artistId,0)
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner,{
+            offsetAll = it.offset + 50
             for(album in it.items) {
+                if (!contains(album, albumsAll)) {
+                    albumsAll.add(album)
+                }
+                val splitDate = album.release_date?.split("-")
+                try {
+                    album.formattedDate = splitDate!![2] + "/" + splitDate[1] + "/" + splitDate[0]
+                } catch (e: IndexOutOfBoundsException) {
+                    album.formattedDate = "01/01/" + splitDate!![0]
+                    Log.e("dateNotFound", album.release_date.toString())
+                }
                 for (library in libraryItems) {
                     if (album.id == library.id) {
-                        album.inLibrary=true
+                        album.inLibrary = true
+                    }
+                }
+                if (offsetAll <= 50) {
+                    albumsAll.sortWith { p0, p1 ->
+                        val calender0 = Calendar.getInstance()
+                        val calender1 = Calendar.getInstance()
+                        val date0 = p0.formattedDate!!.split("/")
+                        val date1 = p1.formattedDate!!.split("/")
+
+                        calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
+                        calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
+                        calender0.set(Calendar.MONTH, date0[1].toInt())
+                        calender1.set(Calendar.MONTH, date1[1].toInt())
+                        calender0.set(Calendar.YEAR, date0[2].toInt())
+                        calender1.set(Calendar.YEAR, date1[2].toInt())
+                        when {
+                            calender0.compareTo(calender1) == 1 -> {
+                                -1
+                            }
+                            calender0.compareTo(calender1) == -1 -> {
+                                1
+                            }
+                            else -> {
+                                0
+                            }
+                        }
                     }
                 }
             }
-            offsetAll=it.offset+50
-            albumsAll.addAll(it.items)
+
             albumAdapterAll.notifyDataSetChanged()
         })
         viewModel.getSingleAlbums(args.artistId,0)
-        viewModel.spotifyAlbumsSingle.observe(viewLifecycleOwner,{
-            for(album in it.items) {
+        viewModel.spotifyAlbumsSingle.observe(viewLifecycleOwner, {
+            offsetSingle = it.offset + 50
+
+            for (album in it.items) {
+                if (!contains(album, albumsSingle)) {
+                    albumsSingle.add(album)
+                }
+                val splitDate = album.release_date?.split("-")
+                try {
+                    album.formattedDate = splitDate!![2] + "/" + splitDate[1] + "/" + splitDate[0]
+                } catch (e: IndexOutOfBoundsException) {
+                    album.formattedDate = "01/01/" + splitDate!![0]
+                    Log.e("dateNotFound", album.release_date.toString())
+                }
                 for (library in libraryItems) {
                     if (album.id == library.id) {
-                        album.inLibrary=true
+                        album.inLibrary = true
                     }
                 }
             }
-            offsetSingle=it.offset+50
-            albumsSingle.addAll(it.items)
+            if (offsetSingle <= 50) {
+                albumsSingle.sortWith { p0, p1 ->
+                    val calender0 = Calendar.getInstance()
+                    val calender1 = Calendar.getInstance()
+                    val date0 = p0.formattedDate!!.split("/")
+                    val date1 = p1.formattedDate!!.split("/")
+
+                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
+                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
+                    calender0.set(Calendar.MONTH, date0[1].toInt())
+                    calender1.set(Calendar.MONTH, date1[1].toInt())
+                    calender0.set(Calendar.YEAR, date0[2].toInt())
+                    calender1.set(Calendar.YEAR, date1[2].toInt())
+                    when {
+                        calender0.compareTo(calender1) == 1 -> {
+                            -1
+                        }
+                        calender0.compareTo(calender1) == -1 -> {
+                            1
+                        }
+                        else -> {
+                            0
+                        }
+                    }
+                }
+            }
             albumAdapterSingle.notifyDataSetChanged()
 
         })
         viewModel.getOnlyAlbums(args.artistId,0)
         viewModel.spotifyAlbumsOnly.observe(viewLifecycleOwner,{
+            offsetOnly = it.offset + 50
             for(album in it.items) {
+                if (!contains(album, albumsOnly)) {
+                    albumsOnly.add(album)
+                }
+                val splitDate = album.release_date?.split("-")
+                try {
+                    album.formattedDate = splitDate!![2] + "/" + splitDate[1] + "/" + splitDate[0]
+                } catch (e: IndexOutOfBoundsException) {
+                    album.formattedDate = "01/01/" + splitDate!![0]
+                    Log.e("dateNotFound", album.release_date.toString())
+                }
                 for (library in libraryItems) {
                     if (album.id == library.id) {
-                        album.inLibrary=true
+                        album.inLibrary = true
                     }
                 }
             }
-            offsetOnly=it.offset+50
-            albumsOnly.addAll(it.items)
+            if (offsetOnly <= 50) {
+                albumsOnly.sortWith { p0, p1 ->
+                    val calender0 = Calendar.getInstance()
+                    val calender1 = Calendar.getInstance()
+                    val date0 = p0.formattedDate!!.split("/")
+                    val date1 = p1.formattedDate!!.split("/")
+
+                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
+                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
+                    calender0.set(Calendar.MONTH, date0[1].toInt())
+                    calender1.set(Calendar.MONTH, date1[1].toInt())
+                    calender0.set(Calendar.YEAR, date0[2].toInt())
+                    calender1.set(Calendar.YEAR, date1[2].toInt())
+                    when {
+                        calender0.compareTo(calender1) == 1 -> {
+                            -1
+                        }
+                        calender0.compareTo(calender1) == -1 -> {
+                            1
+                        }
+                        else -> {
+                            0
+                        }
+                    }
+                }
+            }
             albumAdapterAlbum.notifyDataSetChanged()
 
         })
@@ -200,19 +344,54 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
         viewModel.spotifyAlbumsFeatured.observe(viewLifecycleOwner,{
             offsetFeatured=it.offset+50
             for(album in it.items) {
-                var various=false
+                val splitDate = album.release_date?.split("-")
+                try {
+                    album.formattedDate = splitDate!![2] + "/" + splitDate[1] + "/" + splitDate[0]
+                } catch (e: IndexOutOfBoundsException) {
+                    album.formattedDate = "01/01/" + splitDate!![0]
+                    Log.e("dateNotFound", album.release_date.toString())
+                }
+                var various = false
                 for (library in libraryItems) {
                     if (album.id == library.id) {
-                        album.inLibrary=true
+                        album.inLibrary = true
                     }
                 }
                 for (artist in album.artists) {
                     if (artist.name == "Various Artists") {
-                        various=true
+                        various = true
                     }
                 }
                 if (!various) {
-                    albumsFeatured.add(album)
+                    if (!contains(album, albumsFeatured)) {
+                        albumsFeatured.add(album)
+                    }
+                }
+            }
+            if (offsetFeatured <= 50) {
+                albumsFeatured.sortWith { p0, p1 ->
+                    val calender0 = Calendar.getInstance()
+                    val calender1 = Calendar.getInstance()
+                    val date0 = p0.formattedDate!!.split("/")
+                    val date1 = p1.formattedDate!!.split("/")
+
+                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
+                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
+                    calender0.set(Calendar.MONTH, date0[1].toInt())
+                    calender1.set(Calendar.MONTH, date1[1].toInt())
+                    calender0.set(Calendar.YEAR, date0[2].toInt())
+                    calender1.set(Calendar.YEAR, date1[2].toInt())
+                    when {
+                        calender0.compareTo(calender1) == 1 -> {
+                            -1
+                        }
+                        calender0.compareTo(calender1) == -1 -> {
+                            1
+                        }
+                        else -> {
+                            0
+                        }
+                    }
                 }
             }
             albumAdapterFeatured.notifyDataSetChanged()
@@ -302,13 +481,11 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
             viewModel.unfollowArtist(args.artistId)
             followState()
         }
-
     }
 
 
     private fun followState() {
         binding.cardColor="#FFFFFF"
-
         binding.followText.setTextColor(Color.parseColor("#001C6A"))
         binding.followText.text="Follow"
         binding.followArtist.setOnClickListener {
@@ -328,25 +505,47 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                 navHostFragment.navController.navigate(action)
             }
             2 -> {
-                val action=ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToAlbumDetailsFragment(albumsOnly[position],args.name)
+                val action =
+                    ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToAlbumDetailsFragment(
+                        albumsOnly[position],
+                        args.name
+                    )
                 navHostFragment.navController.navigate(action)
             }
             3 -> {
-                val action=ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToAlbumDetailsFragment(albumsFeatured[position],args.name)
+                val action =
+                    ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToAlbumDetailsFragment(
+                        albumsFeatured[position],
+                        args.name
+                    )
                 navHostFragment.navController.navigate(action)
             }
         }
     }
 
+    private fun contains(item: AlbumItems, albums: ArrayList<AlbumItems>): Boolean {
+        for (album in albums) {
+            if (album.name == item.name) {
+                return true
+            }
+        }
+        return false
+    }
+
     override fun onAddToLibrary(albumItems: AlbumItems) {
         viewModel.addToLibrary(albumItems)
-        Toast.makeText(requireContext(),"Added To Library",Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Added To Library", Toast.LENGTH_SHORT).show()
     }
 
     override fun onRemoveFromLibrary(albumItems: AlbumItems) {
         viewModel.removeFromLibrary(albumItems)
-        Toast.makeText(requireContext(),"Removed From Library",Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Removed From Library", Toast.LENGTH_SHORT).show()
 
     }
+
+    override fun onArtistClick(name: String, id: String, image: String) {
+
+    }
+
 
 }

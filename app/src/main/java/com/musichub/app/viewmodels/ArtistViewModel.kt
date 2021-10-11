@@ -22,6 +22,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import java.io.IOException
+import java.lang.Exception
 import javax.inject.Inject
 import kotlin.concurrent.thread
 
@@ -119,15 +120,20 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onSuccess(element: JsonElement) {
-                    Log.d("geniusRep",element.asJsonObject.toString())
-                    val t=element.asJsonObject
-                    val response=t.getAsJsonObject("response")
-                    val hits=response.getAsJsonArray("hits")
-                    val results=hits.get(0).asJsonObject
-                    val result=results.getAsJsonObject("result")
-                    val artist=result.getAsJsonObject("primary_artist")
-                    val artistId=artist.get("id").toString()
-                    getGeniusArtist(artistId)
+                    try {
+                        Log.d("geniusRep", element.asJsonObject.toString())
+                        val t = element.asJsonObject
+                        val response = t.getAsJsonObject("response")
+                        val hits = response.getAsJsonArray("hits")
+                        val results = hits.get(0).asJsonObject
+                        val result = results.getAsJsonObject("result")
+                        val artist = result.getAsJsonObject("primary_artist")
+                        val artistId = artist.get("id").toString()
+                        getGeniusArtist(artistId)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
                 }
 
                 override fun onError(e: Throwable) {
@@ -156,27 +162,29 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getAllAlbums(id, offset)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getAllAlbums(id, offset)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -200,27 +208,29 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getSingleAlbums(id, offset)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getSingleAlbums(id, offset)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -262,27 +272,29 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getFeaturedAlbums(id, offset)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getFeaturedAlbums(id, offset)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -347,32 +359,58 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onSuccess(t: JsonElement) {
-                    val json=t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist").getAsJsonObject("description").getAsJsonObject("dom").getAsJsonArray("children").get(0).asJsonObject.getAsJsonArray("children")
-                    val artist=t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
-                    val social=ArtistSocialMedia(artist.get("facebook_name").toString().replace("\"",""),artist.get("twitter_name").toString().replace("\"",""),artist.get("instagram_name").toString().replace("\"",""))
-                    artistSocialMedia.postValue(social)
-                    var bio=""
-                    for (i in 0 until json.size()) {
-                        val item=json.get(i)
-                        if (json.get(i).isJsonObject) {
-                            val obj=json.get(i).asJsonObject.getAsJsonArray("children").get(0)
-                            if (obj.isJsonObject) {
-                                val obj1=obj.asJsonObject.getAsJsonArray("children").get(0)
-                                bio= "$bio $obj1 "
-                            }
-                            else {
-                                bio= "$bio $obj "
-                            }
+                    val size = t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
+                        .getAsJsonObject("description").getAsJsonObject("dom")
+                        .getAsJsonArray("children").size()
+                    Log.d("sizeBio", size.toString())
+                    var bio = ""
 
+                    for (js in 0 until size) {
+                        if (js > 0) {
+                            bio += "\n"
                         }
-                        else {
-                            bio= "$bio $item "
+                        val raw =
+                            t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
+                                .getAsJsonObject("description").getAsJsonObject("dom")
+                                .getAsJsonArray("children")
+                                .get(js)
+                        if (raw.isJsonObject) {
+                            val json = raw.asJsonObject.getAsJsonArray("children")
+                            for (i in 0 until json.size()) {
+                                val item = json.get(i)
+                                if (json.get(i).isJsonObject) {
+                                    val obj =
+                                        json.get(i).asJsonObject.getAsJsonArray("children").get(0)
+                                    if (obj.isJsonObject) {
+                                        val obj1 =
+                                            obj.asJsonObject.getAsJsonArray("children").get(0)
+                                        bio = "$bio $obj1 "
+                                    } else {
+                                        bio = "$bio $obj "
+                                    }
+
+                                } else {
+                                    bio = "$bio $item "
+                                }
+                                bio = bio.replace(Regex("""["}{/]"""), "")
+                            }
+                        } else {
+                            val json = raw.toString()
+                            Log.d("Bio " + js, json)
                         }
-                        bio=bio.replace(Regex("""["}{/]"""), "")
                     }
-                    bio=bio.replace("  "," ").replace("  "," ")
-                    bio=bio.trim()
+                    bio = bio.replace("  ", " ").replace("  ", " ")
+                    bio = bio.trim()
+                    Log.d("finalBio", bio)
                     artistBio.postValue(bio)
+                    val artist =
+                        t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
+                    val social = ArtistSocialMedia(
+                        artist.get("facebook_name").toString().replace("\"", ""),
+                        artist.get("twitter_name").toString().replace("\"", ""),
+                        artist.get("instagram_name").toString().replace("\"", "")
+                    )
+                    artistSocialMedia.postValue(social)
                 }
 
                 override fun onError(e: Throwable) {

@@ -206,18 +206,134 @@ class LibraryFragment : Fragment() , RecyclerViewItemClick {
     }
     override fun onItemClick(position: Int) {
         if (binding.tabLayout.selectedTabPosition == 0) {
-            if (position<albumsAll.size) {
-                Log.d("album",albumsAll[position].artists.size.toString())
-                val action=LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(albumsAll[position],albumsAll[position].artists[0].name+"")
+            if (tracksAll.isNotEmpty()) {
+                if (position < tracksAll.size) {
+                    Log.d("track", "found")
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            tracksAll[position].album,
+                            tracksAll[position].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val pos = position % tracksAll.size
+                    Log.d(
+                        "album",
+                        albumsAll[pos].artists.size.toString() + " " + albumsAll[pos].artists[0].name
+                    )
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            albumsAll[pos],
+                            albumsAll[pos].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+            } else {
+                val action =
+                    LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                        albumsAll[position],
+                        albumsAll[position].artists[0].name + ""
+                    )
                 navHostFragment.navController.navigate(action)
             }
-            else {
-                Log.d("track","found")
-                val pos=position%albumsAll.size
-                val action=LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(tracksAll[pos].album,tracksAll[pos].artists[0].name+"")
+
+        } else if (binding.tabLayout.selectedTabPosition == 1) {
+            if (tracksSingle.isNotEmpty()) {
+                if (position < tracksSingle.size) {
+                    Log.d("track", "found")
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            tracksSingle[position].album,
+                            tracksSingle[position].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val pos = position % tracksSingle.size
+                    Log.d(
+                        "album",
+                        albumsSingle[pos].artists.size.toString() + " " + albumsSingle[pos].artists[0].name
+                    )
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            albumsSingle[pos],
+                            albumsSingle[pos].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+            } else {
+                val action =
+                    LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                        albumsSingle[position],
+                        albumsSingle[position].artists[0].name + ""
+                    )
                 navHostFragment.navController.navigate(action)
             }
+
+        } else if (binding.tabLayout.selectedTabPosition == 2) {
+            if (tracksAlbum.isNotEmpty()) {
+                if (position < tracksAlbum.size) {
+                    Log.d("track", "found")
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            tracksAlbum[position].album,
+                            tracksAlbum[position].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val pos = position % tracksAlbum.size
+                    Log.d(
+                        "album",
+                        albumsAll[pos].artists.size.toString() + " " + albumsAll[pos].artists[0].name
+                    )
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            albumsAll[pos],
+                            albumsAll[pos].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+            } else {
+                val action =
+                    LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                        albumsAll[position],
+                        albumsAll[position].artists[0].name + ""
+                    )
+                navHostFragment.navController.navigate(action)
+            }
+        } else if (binding.tabLayout.selectedTabPosition == 3) {
+            if (tracksCompilation.isNotEmpty()) {
+                if (position < tracksCompilation.size) {
+                    Log.d("track", "found")
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            tracksCompilation[position].album,
+                            tracksCompilation[position].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val pos = position % tracksCompilation.size
+                    Log.d(
+                        "album",
+                        albumsCompilation[pos].artists.size.toString() + " " + albumsCompilation[pos].artists[0].name
+                    )
+                    val action =
+                        LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                            albumsCompilation[pos],
+                            albumsCompilation[pos].artists[0].name + ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+            } else {
+                val action =
+                    LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
+                        albumsCompilation[position],
+                        albumsCompilation[position].artists[0].name + ""
+                    )
+                navHostFragment.navController.navigate(action)
+            }
+
         }
+
     }
 
 
@@ -226,6 +342,10 @@ class LibraryFragment : Fragment() , RecyclerViewItemClick {
     }
 
     override fun onRemoveFromLibrary(albumItems: AlbumItems) {
+
+    }
+
+    override fun onArtistClick(name: String, id: String, image: String) {
 
     }
 

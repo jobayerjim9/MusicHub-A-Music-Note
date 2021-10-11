@@ -26,20 +26,25 @@ import android.os.CountDownTimer
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.content.ContextCompat
+import com.musichub.app.adapters.SongRelationshipAdapter
+import com.musichub.app.helpers.listeners.OnArtistClick
 import com.musichub.app.models.genius.Song
+import com.musichub.app.models.genius.SongRelationships
 import java.lang.IllegalStateException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 @AndroidEntryPoint
-class TrackDetailsFragment : Fragment() {
+class TrackDetailsFragment : Fragment(), OnArtistClick {
     private val args: TrackDetailsFragmentArgs by navArgs()
-    lateinit var binding:FragmentTrackDetailsBinding
-    lateinit var viewModel:TrackViewModel
+    lateinit var binding: FragmentTrackDetailsBinding
+    lateinit var viewModel: TrackViewModel
     lateinit var navHostFragment: NavHostFragment
     lateinit var mediaPlayer: MediaPlayer
-    private var countDownTimer:CountDownTimer? = null
+    private var countDownTimer: CountDownTimer? = null
+    var launched = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -100,6 +105,28 @@ class TrackDetailsFragment : Fragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
+        viewModel.foundArtist.observe(viewLifecycleOwner, {
+            if (!launched) {
+                if (it.images!!.isNotEmpty()) {
+                    val action =
+                        TrackDetailsFragmentDirections.actionTrackDetailsFragmentToArtistDetailsFragment(
+                            it.name,
+                            it.id,
+                            it.images[0].url
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val action =
+                        TrackDetailsFragmentDirections.actionTrackDetailsFragmentToArtistDetailsFragment(
+                            it.name,
+                            it.id,
+                            ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+                launched = true
+            }
+        })
 
     }
     private fun seekbarUpdate(duration: Long) {
@@ -121,47 +148,80 @@ class TrackDetailsFragment : Fragment() {
         }.start()
     }
     private fun populateSongInfo(it: Song) {
-        binding.primaryArtist.text=it.primary_artist.name
 
-        val writerAdapter= SongArtistAdapter(requireContext(),it.writer_artists)
-        binding.writerRecycler.layoutManager= LinearLayoutManager(requireContext())
-        binding.writerRecycler.adapter=writerAdapter
+        binding.primaryArtist.text = it.primary_artist.name
 
-        val producerAdapter= SongArtistAdapter(requireContext(),it.producer_artists)
-        binding.producerRecycler.layoutManager= LinearLayoutManager(requireContext())
-        binding.producerRecycler.adapter=producerAdapter
+        val writerAdapter = SongArtistAdapter(requireContext(), it.writer_artists, this)
+        binding.writerRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.writerRecycler.adapter = writerAdapter
 
-        val performanceAdapter= PerformanceArtistAdapter(requireContext(),it.custom_performances)
-        binding.performanceRecycler.layoutManager= LinearLayoutManager(requireContext())
-        binding.performanceRecycler.adapter=performanceAdapter
-        var youtubeFound=false
-        var soundcloudFound=false
+        val featuredArtistAdapter = SongArtistAdapter(requireContext(), it.featured_artists, this)
+        binding.featuredArtist.layoutManager = LinearLayoutManager(requireContext())
+        binding.featuredArtist.adapter = featuredArtistAdapter
+        if (it.featured_artists.size == 0) {
+            binding.fArtist.visibility = View.GONE
+        }
 
-        for(media in it.media) {
+        val producerAdapter = SongArtistAdapter(requireContext(), it.producer_artists, this)
+        binding.producerRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.producerRecycler.adapter = producerAdapter
+
+        val performanceAdapter =
+            PerformanceArtistAdapter(requireContext(), it.custom_performances, this)
+        binding.performanceRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.performanceRecycler.adapter = performanceAdapter
+        val relations: ArrayList<SongRelationships> = ArrayList()
+        for (relation in it.song_relationships) {
+            if (relation.songs.isNotEmpty()) {
+                relations.add(relation)
+            }
+        }
+
+
+        val relationshipAdapter = SongRelationshipAdapter(requireContext(), relations)
+        binding.relationshipRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.relationshipRecycler.adapter = relationshipAdapter
+
+
+        var youtubeFound = false
+        var soundcloudFound = false
+
+        for (media in it.media) {
             if (media.provider == "youtube") {
-                youtubeFound=true
-                binding.youtubeIcon.setOnClickListener { v->
-                    val uri=Uri.parse(media.url)
+                youtubeFound = true
+                binding.youtubeIcon.setOnClickListener { v ->
+                    val uri = Uri.parse(media.url)
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                 }
-            }
-            else if (media.provider == "soundcloud") {
-                soundcloudFound=true
-                binding.soundcloud.setOnClickListener { v->
-                    val uri=Uri.parse(media.url)
+            } else if (media.provider == "soundcloud") {
+                soundcloudFound = true
+                binding.soundcloud.setOnClickListener { v ->
+                    val uri = Uri.parse(media.url)
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                 }
             }
         }
         if (!youtubeFound) {
-            binding.youtubeIcon.alpha = 0.5f
+            binding.youtubeIcon.visibility = View.GONE
         }
         if (!soundcloudFound) {
-            binding.soundcloud.alpha = 0.5f
+            binding.soundcloud.visibility = View.GONE
+        }
+        binding.geniusDetails.setOnClickListener { v ->
+            val uri =
+                Uri.parse(it.url)
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+
         }
 
+    }
+
+    override fun onArtistClick(name: String) {
+        launched = false
+        viewModel.searchArtistSpotify(name)
     }
 
 }

@@ -12,6 +12,7 @@ import com.musichub.app.databinding.ItemLibraryBinding
 import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.spotify.AlbumItems
 import com.musichub.app.models.spotify.TrackItems
+import java.lang.Exception
 
 class LibraryAdapter(private val context:Context,private val albums:ArrayList<AlbumItems>,private val tracks: ArrayList<TrackItems>,private val listener : RecyclerViewItemClick) : RecyclerView.Adapter<LibraryAdapter.ViewHolder>() {
 
@@ -22,17 +23,22 @@ class LibraryAdapter(private val context:Context,private val albums:ArrayList<Al
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         //Log.d("positionAll",position.toString())
         if (position<tracks.size) {
-            val track=tracks[position]
-            holder.binding?.name=track.name
-            var artists=""
+            val track = tracks[position]
+            holder.binding?.name = track.name
+            var artists = ""
             for (i in 0 until track.artists.size) {
                 artists += track.artists[i].name
-                if (i<track.artists.size-1) {
-                    artists= "$artists, "
+                if (i < track.artists.size - 1) {
+                    artists = "$artists, "
                 }
             }
             holder.binding?.artistName = artists
-            holder.binding?.image= track.album.images?.get(0)?.url
+            try {
+                holder.binding?.image = track.album.images?.get(0)?.url
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             //Log.d("positionAlbum",position.toString() + " "+albums[position].name)
         }
         else {

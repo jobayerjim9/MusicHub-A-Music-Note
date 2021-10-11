@@ -7,20 +7,22 @@
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/activity_splash.xml" value="0.22" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/activity_web_view.xml" value="0.3233695652173913" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_album_details.xml" value="0.33" />
-        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_artist_details.xml" value="0.2" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_artist_details.xml" value="0.358087487283825" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_artists.xml" value="0.33" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_full_bio.xml" value="0.25" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_library.xml" value="0.33" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_settings.xml" value="0.5" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_timeline.xml" value="0.33" />
-        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_track_details.xml" value="0.67" />
-        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_albums.xml" value="0.33" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/fragment_track_details.xml" value="0.33" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_albums.xml" value="0.25" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_artist.xml" value="0.5" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_artist_short.xml" value="0.20416666666666666" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_artist_text.xml" value="0.16041666666666668" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_library.xml" value="0.25" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_performance_artist.xml" value="0.360054347826087" />
-        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_timeline_albums.xml" value="0.33" />
-        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_tracks.xml" value="0.33" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_song_relationships.xml" value="0.33" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_timeline_albums.xml" value="0.25" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/item_tracks.xml" value="0.5" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/menu/main_nav_menu.xml" value="0.36666666666666664" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.3769230769230769" />
       </map>

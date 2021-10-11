@@ -69,15 +69,35 @@ class TimelineAlbumAdapter(private val context:Context, private val items:ArrayL
             holder.binding?.type?.text="Featured"
         }
         else if (item.album_group=="album") {
-            holder.binding?.type?.text="Album"
-        }
-        else if (item.album_group=="single") {
-            holder.binding?.type?.text="Single"
+            holder.binding?.type?.text = "Album"
+        } else if (item.album_group == "single") {
+            holder.binding?.type?.text = "Single/EP"
         }
 
-        holder.binding?.artists?.text=artists
+        holder.binding?.artists?.text = artists
         holder.binding?.item?.setOnClickListener {
             listener.onItemClick(position)
+        }
+        holder.binding?.artistName?.setOnClickListener {
+            listener.onArtistClick(
+                holder.binding.artist!!.name,
+                holder.binding.artist!!.artistId,
+                holder.binding.artist!!.image
+            )
+        }
+        holder.binding?.artists?.setOnClickListener {
+            listener.onArtistClick(
+                holder.binding.artist!!.name,
+                holder.binding.artist!!.artistId,
+                holder.binding.artist!!.image
+            )
+        }
+        holder.binding?.profileImage?.setOnClickListener {
+            listener.onArtistClick(
+                holder.binding.artist!!.name,
+                holder.binding.artist!!.artistId,
+                holder.binding.artist!!.image
+            )
         }
 
         holder.binding?.executePendingBindings()
@@ -88,6 +108,5 @@ class TimelineAlbumAdapter(private val context:Context, private val items:ArrayL
     }
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val binding:ItemTimelineAlbumsBinding? = DataBindingUtil.bind(itemView)
-
     }
 }

@@ -8,15 +8,12 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.musichub.app.R
 import com.musichub.app.databinding.ItemArtistTextBinding
-import com.musichub.app.helpers.listeners.OnArtistClick
-import com.musichub.app.helpers.listeners.RecyclerViewItemClick
-import com.musichub.app.models.genius.Artist
+import com.musichub.app.models.genius.RelationshipItem
 
-class SongArtistAdapter(
+class RelationshipItemAdapter(
     private val context: Context,
-    private val artists: ArrayList<Artist>,
-    private val listener: OnArtistClick
-) : RecyclerView.Adapter<SongArtistAdapter.ViewHolder>() {
+    private val items: ArrayList<RelationshipItem>
+) : RecyclerView.Adapter<RelationshipItemAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -25,17 +22,15 @@ class SongArtistAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.binding?.name = artists[position].name
-        holder.binding?.nameView?.setOnClickListener {
-            listener.onArtistClick(artists[position].name)
-        }
+        holder.binding?.name = items[position].full_title
         holder.binding?.executePendingBindings()
     }
 
     override fun getItemCount(): Int {
-        return artists.size
+        return items.size
     }
+
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val binding : ItemArtistTextBinding? = DataBindingUtil.bind(itemView)
+        val binding: ItemArtistTextBinding? = DataBindingUtil.bind(itemView)
     }
 }

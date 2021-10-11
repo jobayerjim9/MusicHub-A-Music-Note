@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.JsonElement
 import com.musichub.app.models.genius.Song
 import com.musichub.app.models.genius.SongDetails
+import com.musichub.app.models.spotify.SpotifyArtistItem
+import com.musichub.app.models.spotify.SpotifyArtistResponse
 import com.musichub.app.repositories.MusicHubRepositories
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.Observer
@@ -17,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TrackViewModel @Inject constructor(private val repo: MusicHubRepositories) : ViewModel() {
     val songBio: MutableLiveData<String> = MutableLiveData()
-    val song : MutableLiveData<Song> = MutableLiveData()
+    val song: MutableLiveData<Song> = MutableLiveData()
+    val foundArtist: MutableLiveData<SpotifyArtistItem> = MutableLiveData()
     fun getSongDetails(id:String) {
         repo.getSongDetails(id)
             .subscribeOn(Schedulers.io())
@@ -42,11 +45,42 @@ class TrackViewModel @Inject constructor(private val repo: MusicHubRepositories)
             })
 
     }
+
+    fun searchArtistSpotify(term: String) {
+        repo.searchArtist(term, 0)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<SpotifyArtistResponse> {
+                override fun onSubscribe(d: Disposable) {
+
+                }
+
+
+                override fun onError(e: Throwable) {
+
+                }
+
+                override fun onNext(t: SpotifyArtistResponse) {
+                    for (artist in t.artists.items) {
+                        if (artist.name.lowercase().trim() == term.lowercase().trim()) {
+                            foundArtist.postValue(artist)
+                            break
+                        }
+                    }
+                }
+
+                override fun onComplete() {
+
+                }
+
+            })
+    }
+
     fun getSongBio(id: String) {
         repo.getSongBio(id)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object :SingleObserver<JsonElement> {
+            .subscribe(object : SingleObserver<JsonElement> {
                 override fun onSubscribe(d: Disposable) {
 
                 }

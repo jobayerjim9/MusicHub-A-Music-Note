@@ -55,7 +55,7 @@ class SettingsFragment : Fragment() {
                 .setPositiveButton("Yes") {dialog,which ->
                     viewModel.clearLibrary()
                     dialog.dismiss()
-                    Toast.makeText(requireContext(),"All Artists Unfollowed!",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Library Cleared!", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton("No") {dialog,which ->
                     dialog.dismiss()

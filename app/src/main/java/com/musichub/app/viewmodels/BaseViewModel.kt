@@ -85,27 +85,29 @@ class BaseViewModel @Inject constructor(private val repo: MusicHubRepositories) 
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getAlbumById(id)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getAlbumById(id)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -125,27 +127,29 @@ class BaseViewModel @Inject constructor(private val repo: MusicHubRepositories) 
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getSpotifyArtistById(id)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getSpotifyArtistById(id)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 

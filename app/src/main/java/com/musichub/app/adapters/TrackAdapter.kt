@@ -10,6 +10,7 @@ import com.musichub.app.R
 import com.musichub.app.databinding.ItemTracksBinding
 import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.spotify.TrackItems
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 
 class TrackAdapter(private val context: Context, private val tracks: ArrayList<TrackItems>,private val listener: RecyclerViewItemClick) :
@@ -22,8 +23,8 @@ class TrackAdapter(private val context: Context, private val tracks: ArrayList<T
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val track = tracks[position]
-        holder.binding?.trackNumber?.text=(position+1).toString()
-        holder.binding?.name?.text=track.name
+        holder.binding?.trackNumber?.text = (position + 1).toString()
+        holder.binding?.name?.text = track.name
         var artists = ""
         for (i in 0 until track.artists.size) {
             artists += track.artists[i].name
@@ -32,12 +33,16 @@ class TrackAdapter(private val context: Context, private val tracks: ArrayList<T
             }
         }
         holder.binding?.artistName?.text = artists
-        val durationS = String.format(
-            "%d:%d",
-            TimeUnit.MILLISECONDS.toMinutes(track.duration_ms),
-            TimeUnit.MILLISECONDS.toSeconds(track.duration_ms) -
-                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(track.duration_ms))
-        )
+        val minute = TimeUnit.MILLISECONDS.toMinutes(track.duration_ms)
+        val second = TimeUnit.MILLISECONDS.toSeconds(track.duration_ms) -
+                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(track.duration_ms))
+        var durationS = ""
+        if (second.toString().length == 1) {
+            durationS = "$minute:0$second"
+        } else {
+            durationS = "$minute:$second"
+        }
+
         holder.binding?.item?.setOnClickListener {
             listener.onItemClick(position)
         }

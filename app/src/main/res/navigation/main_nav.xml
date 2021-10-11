@@ -12,10 +12,13 @@
         android:label="fragment_timeline"
         app:enterAnim="@android:anim/slide_in_left"
         app:exitAnim="@android:anim/slide_out_right"
-        tools:layout="@layout/fragment_timeline" >
+        tools:layout="@layout/fragment_timeline">
         <action
             android:id="@+id/action_timelineFragment_to_albumDetailsFragment"
             app:destination="@id/albumDetailsFragment" />
+        <action
+            android:id="@+id/action_timelineFragment_to_artistDetailsFragment"
+            app:destination="@id/artistDetailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/artistsFragment"
@@ -63,10 +66,13 @@
         <argument
             android:name="image"
             app:argType="string"
-            app:nullable="true"/>
+            app:nullable="true" />
         <action
             android:id="@+id/action_artistDetailsFragment_to_albumDetailsFragment"
             app:destination="@id/albumDetailsFragment" />
+        <action
+            android:id="@+id/action_artistDetailsFragment_to_fullBioFragment2"
+            app:destination="@id/fullBioFragment" />
     </fragment>
     <fragment
         android:id="@+id/albumDetailsFragment"
@@ -101,5 +107,20 @@
             android:name="previewUrl"
             app:argType="string"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_trackDetailsFragment_to_artistDetailsFragment"
+            app:destination="@id/artistDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/fullBioFragment"
+        android:name="com.musichub.app.ui.fragments.FullBioFragment"
+        android:label="fragment_full_bio"
+        tools:layout="@layout/fragment_full_bio">
+        <argument
+            android:name="artistName"
+            app:argType="string" />
+        <argument
+            android:name="bio"
+            app:argType="string" />
     </fragment>
 </navigation>

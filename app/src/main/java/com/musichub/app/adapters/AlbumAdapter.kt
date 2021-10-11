@@ -59,7 +59,7 @@ class AlbumAdapter(private val context:Context,private val items:ArrayList<Album
             holder.binding?.type?.text="Album"
         }
         else if (items[position].album_group=="single") {
-            holder.binding?.type?.text="Single"
+            holder.binding?.type?.text = "Single/EP"
         }
 
         holder.binding?.artists?.text=artists
