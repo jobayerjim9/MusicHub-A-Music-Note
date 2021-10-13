@@ -366,37 +366,42 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                     var bio = ""
 
                     for (js in 0 until size) {
-                        if (js > 0) {
-                            bio += "\n"
-                        }
-                        val raw =
-                            t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
-                                .getAsJsonObject("description").getAsJsonObject("dom")
-                                .getAsJsonArray("children")
-                                .get(js)
-                        if (raw.isJsonObject) {
-                            val json = raw.asJsonObject.getAsJsonArray("children")
-                            for (i in 0 until json.size()) {
-                                val item = json.get(i)
-                                if (json.get(i).isJsonObject) {
-                                    val obj =
-                                        json.get(i).asJsonObject.getAsJsonArray("children").get(0)
-                                    if (obj.isJsonObject) {
-                                        val obj1 =
-                                            obj.asJsonObject.getAsJsonArray("children").get(0)
-                                        bio = "$bio $obj1 "
-                                    } else {
-                                        bio = "$bio $obj "
-                                    }
-
-                                } else {
-                                    bio = "$bio $item "
-                                }
-                                bio = bio.replace(Regex("""["}{/]"""), "")
+                        try {
+                            if (js > 0) {
+                                bio += "\n"
                             }
-                        } else {
-                            val json = raw.toString()
-                            Log.d("Bio " + js, json)
+                            val raw =
+                                t.asJsonObject.getAsJsonObject("response").getAsJsonObject("artist")
+                                    .getAsJsonObject("description").getAsJsonObject("dom")
+                                    .getAsJsonArray("children")
+                                    .get(js)
+                            if (raw.isJsonObject) {
+                                val json = raw.asJsonObject.getAsJsonArray("children")
+                                for (i in 0 until json.size()) {
+                                    val item = json.get(i)
+                                    if (json.get(i).isJsonObject) {
+                                        val obj =
+                                            json.get(i).asJsonObject.getAsJsonArray("children")
+                                                .get(0)
+                                        if (obj.isJsonObject) {
+                                            val obj1 =
+                                                obj.asJsonObject.getAsJsonArray("children").get(0)
+                                            bio = "$bio $obj1 "
+                                        } else {
+                                            bio = "$bio $obj "
+                                        }
+
+                                    } else {
+                                        bio = "$bio $item "
+                                    }
+                                    bio = bio.replace(Regex("""["}{/]"""), "")
+                                }
+                            } else {
+                                val json = raw.toString()
+                                Log.d("Bio " + js, json)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
                     bio = bio.replace("  ", " ").replace("  ", " ")

@@ -75,7 +75,7 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
                     val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
                     if (currentLastItem == total - 1) {
                         Log.d("recyclerPagination",term)
-                        if (term.isNotEmpty()) {
+                        if (term.isNotEmpty() && artists.size >= 50) {
                             viewModel.searchArtist(term, offset)
                         }
                     }
