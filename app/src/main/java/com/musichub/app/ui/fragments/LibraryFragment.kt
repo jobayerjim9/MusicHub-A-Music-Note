@@ -208,7 +208,10 @@ class LibraryFragment : Fragment() , RecyclerViewItemClick {
         if (binding.tabLayout.selectedTabPosition == 0) {
             if (tracksAll.isNotEmpty()) {
                 if (position < tracksAll.size) {
-                    Log.d("track", "found")
+                    Log.d(
+                        "track",
+                        "found " + tracksAll[position].album.album_type + " " + tracksAll[position].album.name
+                    )
                     val action =
                         LibraryFragmentDirections.actionLibraryFragmentToAlbumDetailsFragment(
                             tracksAll[position].album,

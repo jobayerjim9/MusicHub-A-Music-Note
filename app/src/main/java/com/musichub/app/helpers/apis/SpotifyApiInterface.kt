@@ -30,5 +30,4 @@ interface SpotifyApiInterface {
     fun getAlbumById(@Path("id") id:String) : Single<AlbumItems>
 
 
-
 }

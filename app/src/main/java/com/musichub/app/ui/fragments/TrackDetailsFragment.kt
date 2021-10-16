@@ -1,5 +1,6 @@
 package com.musichub.app.ui.fragments
 
+import android.app.ProgressDialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -28,8 +29,10 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.content.ContextCompat
 import com.musichub.app.adapters.SongRelationshipAdapter
 import com.musichub.app.helpers.listeners.OnArtistClick
+import com.musichub.app.helpers.listeners.RelationshipItemClick
 import com.musichub.app.models.genius.Song
 import com.musichub.app.models.genius.SongRelationships
+import com.musichub.app.viewmodels.ArtistViewModel
 import java.lang.IllegalStateException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,20 +40,24 @@ import kotlin.collections.ArrayList
 
 
 @AndroidEntryPoint
-class TrackDetailsFragment : Fragment(), OnArtistClick {
+class TrackDetailsFragment : Fragment(), OnArtistClick, RelationshipItemClick {
     private val args: TrackDetailsFragmentArgs by navArgs()
     lateinit var binding: FragmentTrackDetailsBinding
     lateinit var viewModel: TrackViewModel
+    lateinit var artistViewModel: ArtistViewModel
     lateinit var navHostFragment: NavHostFragment
     lateinit var mediaPlayer: MediaPlayer
     private var countDownTimer: CountDownTimer? = null
-    var launched = false
+    private var launched = false
+    private var launchedSample = false
+    private var artistName = ""
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding=DataBindingUtil.inflate(inflater,R.layout.fragment_track_details, container, false)
+        binding =
+            DataBindingUtil.inflate(inflater, R.layout.fragment_track_details, container, false)
         initView()
         return binding.root
     }
@@ -61,7 +68,8 @@ class TrackDetailsFragment : Fragment(), OnArtistClick {
         binding.image=args.image
 
         binding.bio="Loading..."
-        viewModel= ViewModelProvider(this).get(TrackViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(TrackViewModel::class.java)
+        artistViewModel = ViewModelProvider(this).get(ArtistViewModel::class.java)
         viewModel.getSongBio(args.songId)
         viewModel.getSongDetails(args.songId)
         viewModel.songBio.observe(viewLifecycleOwner,{
@@ -105,7 +113,12 @@ class TrackDetailsFragment : Fragment(), OnArtistClick {
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
-        viewModel.foundArtist.observe(viewLifecycleOwner, {
+        setupObservers()
+
+    }
+
+    private fun setupObservers() {
+        artistViewModel.foundArtist.observe(viewLifecycleOwner, {
             if (!launched) {
                 if (it.images!!.isNotEmpty()) {
                     val action =
@@ -127,8 +140,19 @@ class TrackDetailsFragment : Fragment(), OnArtistClick {
                 launched = true
             }
         })
-
+        viewModel.foundSample.observe(viewLifecycleOwner, {
+            if (!launchedSample) {
+                val action =
+                    TrackDetailsFragmentDirections.actionTrackDetailsFragmentToAlbumDetailsFragment(
+                        it.album,
+                        artistName
+                    )
+                navHostFragment.navController.navigate(action)
+                launchedSample = true
+            }
+        })
     }
+
     private fun seekbarUpdate(duration: Long) {
         if (countDownTimer != null) {
             countDownTimer!!.cancel()
@@ -178,7 +202,7 @@ class TrackDetailsFragment : Fragment(), OnArtistClick {
         }
 
 
-        val relationshipAdapter = SongRelationshipAdapter(requireContext(), relations)
+        val relationshipAdapter = SongRelationshipAdapter(requireContext(), relations, this)
         binding.relationshipRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.relationshipRecycler.adapter = relationshipAdapter
 
@@ -221,7 +245,14 @@ class TrackDetailsFragment : Fragment(), OnArtistClick {
 
     override fun onArtistClick(name: String) {
         launched = false
-        viewModel.searchArtistSpotify(name)
+        artistViewModel.searchArtistSpotify(name)
+    }
+
+    override fun onRelationShipClick(name: String, artist: String) {
+
+        launchedSample = false
+        artistName = artist
+        viewModel.getAlbumByTrack(name, artist)
     }
 
 }

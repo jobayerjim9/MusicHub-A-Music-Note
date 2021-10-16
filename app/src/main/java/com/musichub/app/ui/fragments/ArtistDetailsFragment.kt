@@ -68,79 +68,18 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
         Log.d("navArgs",args.name+" "+args.image+" "+args.artistId)
 
         navHostFragment=requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
-        viewModel= ViewModelProvider(this).get(ArtistViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(ArtistViewModel::class.java)
+        setupObservers()
         viewModel.searchOnGenius(args.name)
-        binding.image=args.image
-        binding.name=args.name
-        binding.bio="Loading..."
+        binding.image = args.image
+        binding.name = args.name
+        binding.bio = "Loading..."
         binding.back.setOnClickListener {
-            val navHostFragment=requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
+            val navHostFragment =
+                requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
             navHostFragment.navController.popBackStack()
         }
-        viewModel.artistBio.observe(viewLifecycleOwner, {
-            Log.d("bioFromView", it)
-            if (it.length >= 240) {
-                val shortBio = it.substring(0, 240) + "...<font color=#928F92>(Read More)</font>"
-                binding.bio = shortBio
-            } else {
-                val shortBio = "$it...<font color=#928F92>(Read More)</font>"
-                binding.bio = shortBio
-            }
-            binding.textView7.setOnClickListener { v ->
-                val action =
-                    ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToFullBioFragment2(
-                        args.name,
-                        it.toString()
-                    )
-                navHostFragment.navController.navigate(action)
-            }
-        })
-        viewModel.artistSocialMedia.observe(viewLifecycleOwner,{
-            binding.socialMediaLayout.visibility=View.VISIBLE
-            if (it.facebook_name.isEmpty()) {
-                binding.facebook.alpha=0.5f
-            }
-            else {
-                binding.facebook.setOnClickListener { _->
-                    val uri =
-                        Uri.parse("https://www.facebook.com/"+it.facebook_name)
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    startActivity(intent)
-                }
-            }
-            if (it.instagram_name.isEmpty()) {
-                binding.instagram.alpha=0.5f
-            }
-            else {
 
-                binding.instagram.setOnClickListener { _->
-                    val uri =
-                        Uri.parse("https://www.instagram.com/"+it.instagram_name)
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    startActivity(intent)
-                }
-            }
-            if (it.twitter_name.isEmpty()) {
-                binding.twitter.alpha=0.5f
-            }
-            else {
-                binding.twitter.setOnClickListener { _->
-                    val uri =
-                        Uri.parse("https://mobile.twitter.com/"+it.twitter_name)
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    startActivity(intent)
-                }
-            }
-        })
-        viewModel.isFollowed(args.artistId)
-        viewModel.isFollowed.observe(viewLifecycleOwner, {
-            if (it) {
-                unfollowState()
-
-            } else {
-                followState()
-            }
-        })
         val artist = ArtistShort(args.name, args.artistId, args.image.toString())
         val layoutManager = LinearLayoutManager(requireContext())
         binding.albumRecycler.layoutManager = layoutManager
@@ -171,10 +110,9 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                 } else if (binding.tabLayout.selectedTabPosition == 1) {
                     binding.albumRecycler.adapter = albumAdapterSingle
                 } else if (binding.tabLayout.selectedTabPosition == 2) {
-                    binding.albumRecycler.adapter=albumAdapterAlbum
-                }
-                else if (binding.tabLayout.selectedTabPosition==3) {
-                    binding.albumRecycler.adapter=albumAdapterFeatured
+                    binding.albumRecycler.adapter = albumAdapterAlbum
+                } else if (binding.tabLayout.selectedTabPosition == 3) {
+                    binding.albumRecycler.adapter = albumAdapterFeatured
                 }
             }
 
@@ -187,16 +125,117 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
             }
 
         })
-        albumAdapterAll=AlbumAdapter(requireContext(),albumsAll,artist,this)
-        binding.albumRecycler.adapter=albumAdapterAll
-        albumAdapterSingle=AlbumAdapter(requireContext(),albumsSingle,artist,this)
-        albumAdapterAlbum=AlbumAdapter(requireContext(),albumsOnly,artist,this)
-        albumAdapterFeatured=AlbumAdapter(requireContext(),albumsFeatured,artist,this)
+        albumAdapterAll = AlbumAdapter(requireContext(), albumsAll, artist, this)
+        binding.albumRecycler.adapter = albumAdapterAll
+        albumAdapterSingle = AlbumAdapter(requireContext(), albumsSingle, artist, this)
+        albumAdapterAlbum = AlbumAdapter(requireContext(), albumsOnly, artist, this)
+        albumAdapterFeatured = AlbumAdapter(requireContext(), albumsFeatured, artist, this)
+
+        binding.albumRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
+                val total = layoutManager!!.itemCount
+                val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
+                if (currentLastItem == total - 1) {
+                    if (binding.tabLayout.selectedTabPosition == 0) {
+                        viewModel.getAllAlbums(args.artistId, offsetAll)
+                    } else if (binding.tabLayout.selectedTabPosition == 1) {
+                        viewModel.getSingleAlbums(args.artistId, offsetSingle)
+                    } else if (binding.tabLayout.selectedTabPosition == 2) {
+                        viewModel.getOnlyAlbums(args.artistId, offsetOnly)
+                    } else if (binding.tabLayout.selectedTabPosition == 3) {
+                        viewModel.getFeaturedAlbums(args.artistId, offsetFeatured)
+                    }
+                }
+
+            }
+        })
+        viewModel.getLibraryItems()
+
+
+        binding.share.setOnClickListener {
+            val shareIntent = Intent()
+            val text =
+                "Checkout " + args.name + " On MusicHub:- " + "https://musichub.com/artist/" + args.artistId
+            shareIntent.action = Intent.ACTION_SEND
+            shareIntent.type = "text/plain"
+            shareIntent.putExtra(Intent.EXTRA_TEXT, text)
+            startActivity(Intent.createChooser(shareIntent, "Share via"))
+        }
+    }
+
+    private fun setupObservers() {
+        viewModel.artistBio.observe(viewLifecycleOwner, {
+            Log.d("bioFromView", it)
+            if (it.length >= 240) {
+                val shortBio = it.substring(0, 240) + "...<font color=#928F92>(Read More)</font>"
+                binding.bio = shortBio
+            } else {
+                val shortBio = "$it...<font color=#928F92>(Read More)</font>"
+                binding.bio = shortBio
+            }
+            binding.textView7.setOnClickListener { v ->
+                val action =
+                    ArtistDetailsFragmentDirections.actionArtistDetailsFragmentToFullBioFragment2(
+                        args.name,
+                        it.toString()
+                    )
+                navHostFragment.navController.navigate(action)
+            }
+        })
+        viewModel.artistSocialMedia.observe(viewLifecycleOwner,{
+            binding.socialMediaLayout.visibility=View.VISIBLE
+            if (it.facebook_name.isEmpty()) {
+                binding.facebook.alpha=0.5f
+            } else {
+                binding.facebook.setOnClickListener { _->
+                    val uri =
+                        Uri.parse("https://www.facebook.com/"+it.facebook_name)
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                }
+            }
+            if (it.instagram_name.isEmpty()) {
+                binding.instagram.alpha=0.5f
+            } else {
+
+                binding.instagram.setOnClickListener { _->
+                    val uri =
+                        Uri.parse("https://www.instagram.com/"+it.instagram_name)
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                }
+            }
+            if (it.twitter_name.isEmpty()) {
+                binding.twitter.alpha=0.5f
+            } else {
+                binding.twitter.setOnClickListener { _->
+                    val uri =
+                        Uri.parse("https://mobile.twitter.com/"+it.twitter_name)
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                }
+            }
+        })
+        viewModel.isFollowed(args.artistId)
+        viewModel.isFollowed.observe(viewLifecycleOwner, {
+            if (it) {
+                unfollowState()
+
+            } else {
+                followState()
+            }
+        })
         viewModel.getAllAlbums(args.artistId,0)
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner,{
             offsetAll = it.offset + 50
             for(album in it.items) {
-                if (!contains(album, albumsAll)) {
+                if (!contains(
+                        album,
+                        albumsAll
+                    ) && album.album_type != "compilation" && !isVariousArtist(album)
+                ) {
                     albumsAll.add(album)
                 }
                 val splitDate = album.release_date?.split("-")
@@ -212,30 +251,7 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                     }
                 }
                 if (offsetAll <= 50) {
-                    albumsAll.sortWith { p0, p1 ->
-                        val calender0 = Calendar.getInstance()
-                        val calender1 = Calendar.getInstance()
-                        val date0 = p0.formattedDate!!.split("/")
-                        val date1 = p1.formattedDate!!.split("/")
-
-                        calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                        calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                        calender0.set(Calendar.MONTH, date0[1].toInt())
-                        calender1.set(Calendar.MONTH, date1[1].toInt())
-                        calender0.set(Calendar.YEAR, date0[2].toInt())
-                        calender1.set(Calendar.YEAR, date1[2].toInt())
-                        when {
-                            calender0.compareTo(calender1) == 1 -> {
-                                -1
-                            }
-                            calender0.compareTo(calender1) == -1 -> {
-                                1
-                            }
-                            else -> {
-                                0
-                            }
-                        }
-                    }
+                    viewModel.sortWith(albumsAll)
                 }
             }
 
@@ -263,30 +279,7 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                 }
             }
             if (offsetSingle <= 50) {
-                albumsSingle.sortWith { p0, p1 ->
-                    val calender0 = Calendar.getInstance()
-                    val calender1 = Calendar.getInstance()
-                    val date0 = p0.formattedDate!!.split("/")
-                    val date1 = p1.formattedDate!!.split("/")
-
-                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                    calender0.set(Calendar.MONTH, date0[1].toInt())
-                    calender1.set(Calendar.MONTH, date1[1].toInt())
-                    calender0.set(Calendar.YEAR, date0[2].toInt())
-                    calender1.set(Calendar.YEAR, date1[2].toInt())
-                    when {
-                        calender0.compareTo(calender1) == 1 -> {
-                            -1
-                        }
-                        calender0.compareTo(calender1) == -1 -> {
-                            1
-                        }
-                        else -> {
-                            0
-                        }
-                    }
-                }
+                viewModel.sortWith(albumsSingle)
             }
             albumAdapterSingle.notifyDataSetChanged()
 
@@ -312,30 +305,7 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                 }
             }
             if (offsetOnly <= 50) {
-                albumsOnly.sortWith { p0, p1 ->
-                    val calender0 = Calendar.getInstance()
-                    val calender1 = Calendar.getInstance()
-                    val date0 = p0.formattedDate!!.split("/")
-                    val date1 = p1.formattedDate!!.split("/")
-
-                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                    calender0.set(Calendar.MONTH, date0[1].toInt())
-                    calender1.set(Calendar.MONTH, date1[1].toInt())
-                    calender0.set(Calendar.YEAR, date0[2].toInt())
-                    calender1.set(Calendar.YEAR, date1[2].toInt())
-                    when {
-                        calender0.compareTo(calender1) == 1 -> {
-                            -1
-                        }
-                        calender0.compareTo(calender1) == -1 -> {
-                            1
-                        }
-                        else -> {
-                            0
-                        }
-                    }
-                }
+                viewModel.sortWith(albumsOnly)
             }
             albumAdapterAlbum.notifyDataSetChanged()
 
@@ -351,75 +321,21 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                     album.formattedDate = "01/01/" + splitDate!![0]
                     Log.e("dateNotFound", album.release_date.toString())
                 }
-                var various = false
                 for (library in libraryItems) {
                     if (album.id == library.id) {
                         album.inLibrary = true
                     }
                 }
-                for (artist in album.artists) {
-                    if (artist.name == "Various Artists") {
-                        various = true
-                    }
-                }
-                if (!various) {
-                    if (!contains(album, albumsFeatured)) {
-                        albumsFeatured.add(album)
-                    }
+
+                if (!contains(album, albumsFeatured) && !isVariousArtist(album)) {
+                    albumsFeatured.add(album)
                 }
             }
             if (offsetFeatured <= 50) {
-                albumsFeatured.sortWith { p0, p1 ->
-                    val calender0 = Calendar.getInstance()
-                    val calender1 = Calendar.getInstance()
-                    val date0 = p0.formattedDate!!.split("/")
-                    val date1 = p1.formattedDate!!.split("/")
-
-                    calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                    calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                    calender0.set(Calendar.MONTH, date0[1].toInt())
-                    calender1.set(Calendar.MONTH, date1[1].toInt())
-                    calender0.set(Calendar.YEAR, date0[2].toInt())
-                    calender1.set(Calendar.YEAR, date1[2].toInt())
-                    when {
-                        calender0.compareTo(calender1) == 1 -> {
-                            -1
-                        }
-                        calender0.compareTo(calender1) == -1 -> {
-                            1
-                        }
-                        else -> {
-                            0
-                        }
-                    }
-                }
+                viewModel.sortWith(albumsFeatured)
             }
             albumAdapterFeatured.notifyDataSetChanged()
         })
-        binding.albumRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
-                val total = layoutManager!!.itemCount
-                val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
-                if (currentLastItem == total - 1) {
-                   if (binding.tabLayout.selectedTabPosition==0) {
-                       viewModel.getAllAlbums(args.artistId,offsetAll)
-                   }
-                   else if (binding.tabLayout.selectedTabPosition==1) {
-                        viewModel.getSingleAlbums(args.artistId,offsetSingle)
-                   }
-                   else if (binding.tabLayout.selectedTabPosition==2) {
-                       viewModel.getOnlyAlbums(args.artistId,offsetOnly)
-                   }
-                   else if (binding.tabLayout.selectedTabPosition==3) {
-                       viewModel.getFeaturedAlbums(args.artistId,offsetFeatured)
-                   }
-                }
-
-            }
-        })
-        viewModel.getLibraryItems()
         viewModel.libraryItems.observe(viewLifecycleOwner,{
             libraryItems.clear()
             if (it.isNotEmpty()) {
@@ -452,31 +368,30 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                         }
                     }
                 }
-                albumsAll.sortBy { album -> !album.inLibrary!! }
-                albumsFeatured.sortBy { album -> !album.inLibrary!! }
-                albumsSingle.sortBy { album -> !album.inLibrary!! }
-                albumsOnly.sortBy { album -> !album.inLibrary!! }
+
                 albumAdapterAll.notifyDataSetChanged()
                 albumAdapterAlbum.notifyDataSetChanged()
                 albumAdapterSingle.notifyDataSetChanged()
                 albumAdapterFeatured.notifyDataSetChanged()
             }
         })
+    }
 
-        binding.share.setOnClickListener {
-            val shareIntent = Intent()
-            val text="Checkout "+args.name+" On MusicHub:- "+"https://musichub.com/artist/"+args.artistId
-            shareIntent.action = Intent.ACTION_SEND
-            shareIntent.type="text/plain"
-            shareIntent.putExtra(Intent.EXTRA_TEXT,text )
-            startActivity(Intent.createChooser(shareIntent,"Share via"))
+    companion object {
+        fun isVariousArtist(album: AlbumItems): Boolean {
+            for (artist in album.artists) {
+                if (artist.name == "Various Artists") {
+                    return true
+                }
+            }
+            return false
         }
     }
 
     private fun unfollowState() {
-        binding.cardColor="#4E1E75"
+        binding.cardColor = "#4E1E75"
         binding.followText.setTextColor(Color.parseColor("#FFFFFF"))
-        binding.followText.text="Unfollow"
+        binding.followText.text = "Unfollow"
         binding.followArtist.setOnClickListener {
             viewModel.unfollowArtist(args.artistId)
             followState()

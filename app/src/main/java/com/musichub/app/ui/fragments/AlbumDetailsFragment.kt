@@ -71,34 +71,41 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
             }
             if (albumItems.inLibrary == true) {
                 inLibraryState()
-            }
-            else {
+            } else {
                 notInLibrary()
             }
 
         })
         viewModel.getAlbumTracks(albumItems.id!!)
-        binding.albumName=albumItems.name
-        binding.artistName=args.artistName
-        binding.image=albumItems.images!![0].url
-        binding.releaseDate=albumItems.release_date
-        if (albumItems.album_type=="appears_on") {
-            binding.albumNameType.text=albumItems!!.name+" (Featured)"
-        }
-        else if (albumItems.album_type=="album") {
-            binding.albumNameType.text=albumItems!!.name+" (Album)"
-        }
-        else if (albumItems.album_type=="single") {
-            binding.albumNameType.text=albumItems!!.name+" (Single/EP)"
+        binding.albumName = albumItems.name
+        binding.artistName = args.artistName
+        binding.image = albumItems.images!![0].url
+        binding.releaseDate = albumItems.formattedDate
+        when (albumItems.album_type) {
+            "appears_on" -> {
+                binding.albumNameType.text = albumItems!!.name + " (Featured)"
+            }
+            "album" -> {
+                binding.albumNameType.text = albumItems!!.name + " (Album)"
+            }
+            "single" -> {
+                binding.albumNameType.text = albumItems!!.name + " (Single/EP)"
+            }
+            "compilation" -> {
+                binding.albumNameType.text = albumItems!!.name + " (Compilation)"
+            }
+            else -> {
+                binding.albumNameType.text = albumItems!!.name
+            }
         }
         binding.back.setOnClickListener {
             navHostFragment.navController.popBackStack()
         }
-        trackAdapter= TrackAdapter(requireContext(),tracks,this)
-        binding.trackRecycler.layoutManager= LinearLayoutManager(requireContext())
-        binding.trackRecycler.adapter=trackAdapter
+        trackAdapter = TrackAdapter(requireContext(), tracks, this)
+        binding.trackRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.trackRecycler.adapter = trackAdapter
         binding.addToLibrary.setOnClickListener {
-            if (albumItems!=null) {
+            if (albumItems != null) {
                 artistViewModel.addToLibrary(albumItems!!)
             }
         }

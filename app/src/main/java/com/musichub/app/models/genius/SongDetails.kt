@@ -45,7 +45,7 @@ data class SongRelationships(
 
 data class RelationshipItem(
     @SerializedName("full_title") val full_title: String,
-
+    @SerializedName("primary_artist") val primary_artist: Artist
     )
 
 

@@ -69,24 +69,36 @@ class MusicHubRepositories @Inject constructor(
     fun getSongBio(id:String) : Single<JsonElement> {
         return geniusApiInterface.getBio(id)
     }
-    fun getSpotifyArtist(id:String) : Single<SpotifyArtistItem> {
-        val spotifyApiInterface=SpotifyApiClient.getClient(prefManager).create(SpotifyApiInterface::class.java)
+
+    fun getSpotifyArtist(id: String): Single<SpotifyArtistItem> {
+        val spotifyApiInterface =
+            SpotifyApiClient.getClient(prefManager).create(SpotifyApiInterface::class.java)
         return spotifyApiInterface.getArtist(id)
     }
-    fun getSpotifyAlbumById(id:String) : Single<AlbumItems> {
-        val spotifyApiInterface=SpotifyApiClient.getClient(prefManager).create(SpotifyApiInterface::class.java)
+
+    fun getSpotifyAlbumById(id: String): Single<AlbumItems> {
+        val spotifyApiInterface =
+            SpotifyApiClient.getClient(prefManager).create(SpotifyApiInterface::class.java)
         return spotifyApiInterface.getAlbumById(id)
     }
-    fun followArtist(artistId:String,name:String,image:String) {
-        val artist=FollowedArtist(null,artistId,name,image)
+
+    fun getSpotifyAlbumByTrack(q: String, offset: Int): Observable<SpotifyAlbumTrack> {
+        val spotifyApiInterface =
+            SpotifyApiClient.getClient(prefManager).create(SpotifyApiInterface::class.java)
+        return spotifyApiInterface.searchTrackAlbum(q, "track", offset, 50)
+    }
+
+    fun followArtist(artistId: String, name: String, image: String) {
+        val artist = FollowedArtist(null, artistId, name, image)
         thread {
-            Log.d("ArtistFollowed","Done")
+            Log.d("ArtistFollowed", "Done")
             appDatabase.roomDao().insertArtist(artist)
         }
     }
-    fun unfollowArtist(artistId:String) {
+
+    fun unfollowArtist(artistId: String) {
         thread {
-            Log.d("ArtistFollowed","Done")
+            Log.d("ArtistFollowed", "Done")
             appDatabase.roomDao().unfollowArtist(artistId)
         }
     }

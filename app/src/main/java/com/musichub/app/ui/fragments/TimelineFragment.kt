@@ -17,12 +17,14 @@ import com.musichub.app.R
 import com.musichub.app.adapters.AlbumAdapter
 import com.musichub.app.adapters.TimelineAlbumAdapter
 import com.musichub.app.databinding.FragmentTimelineBinding
+import com.musichub.app.helpers.listeners.OnArtistClick
 import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.FollowedArtist
 import com.musichub.app.models.spotify.AlbumItems
 import com.musichub.app.models.spotify.ArtistShort
 import com.musichub.app.models.spotify.SpotifyAlbum
 import com.musichub.app.models.spotify.SpotifyArtistItem
+import com.musichub.app.ui.fragments.ArtistDetailsFragment.Companion.isVariousArtist
 import com.musichub.app.viewmodels.ArtistViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.lang.IndexOutOfBoundsException
@@ -32,7 +34,7 @@ import kotlin.Comparator
 import kotlin.collections.ArrayList
 
 @AndroidEntryPoint
-class TimelineFragment : Fragment(), RecyclerViewItemClick {
+class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
     private lateinit var viewModel: ArtistViewModel
     private lateinit var binding: FragmentTimelineBinding
     private val followedArtistsId: ArrayList<FollowedArtist> = ArrayList()
@@ -51,6 +53,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
     lateinit var albumAdapterAlbum: TimelineAlbumAdapter
     lateinit var navHostFragment: NavHostFragment
     var emptyFollowed = false
+    var launched = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -66,7 +69,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
         viewModel = ViewModelProvider(this).get(ArtistViewModel::class.java)
         navHostFragment =
             requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
-
+        setupObservers()
         binding.albumRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -90,6 +93,65 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
 
             }
 
+        })
+
+        binding.swipeRefresh.setOnRefreshListener {
+            refreshTimeline()
+        }
+        binding.albumRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
+                val total = layoutManager!!.itemCount
+                val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
+                if (currentLastItem == total - 1) {
+                    if (binding.tabLayout.selectedTabPosition == 0) {
+                        for (artist in followedArtistsId) {
+                            viewModel.getAllAlbums(artist.artistId, offsetAll)
+                        }
+
+                    } else if (binding.tabLayout.selectedTabPosition == 1) {
+                        for (artist in followedArtistsId) {
+                            viewModel.getSingleAlbums(artist.artistId, offsetSingle)
+                        }
+                    } else if (binding.tabLayout.selectedTabPosition == 2) {
+                        for (artist in followedArtistsId) {
+                            viewModel.getOnlyAlbums(artist.artistId, offsetOnly)
+                        }
+                    } else if (binding.tabLayout.selectedTabPosition == 3) {
+                        for (artist in followedArtistsId) {
+                            viewModel.getFeaturedAlbums(artist.artistId, offsetFeatured)
+                        }
+                    }
+                }
+
+            }
+        })
+
+    }
+
+    private fun setupObservers() {
+        viewModel.foundArtist.observe(viewLifecycleOwner, {
+            if (!launched) {
+                if (it.images!!.isNotEmpty()) {
+                    val action =
+                        TimelineFragmentDirections.actionTimelineFragmentToArtistDetailsFragment(
+                            it.name,
+                            it.id,
+                            it.images[0].url
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val action =
+                        TimelineFragmentDirections.actionTimelineFragmentToArtistDetailsFragment(
+                            it.name,
+                            it.id,
+                            ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+                launched = true
+            }
         })
         viewModel.followedArtist.observe(viewLifecycleOwner, {
             if (it.isNotEmpty()) {
@@ -123,7 +185,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                 albumsAll,
                 followedArtistsId,
                 libraryItems,
-                this
+                this, this
             )
             binding.albumRecycler.adapter = albumAdapterAll
             albumAdapterSingle = TimelineAlbumAdapter(
@@ -131,27 +193,27 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                 albumsSingle,
                 followedArtistsId,
                 libraryItems,
-                this
+                this, this
             )
             albumAdapterAlbum = TimelineAlbumAdapter(
                 requireContext(),
                 albumsOnly,
                 followedArtistsId,
                 libraryItems,
-                this
+                this, this
             )
             albumAdapterFeatured = TimelineAlbumAdapter(
                 requireContext(),
                 albumsFeatured,
                 followedArtistsId,
                 libraryItems,
-                this
+                this, this
             )
         })
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner, {
             offsetAll = it.offset + 50
             for (album in it.items) {
-                if (!contains(album, albumsAll)) {
+                if (!contains(album, albumsAll) && !isVariousArtist(album)) {
                     albumsAll.add(album)
                 }
                 val splitDate = album.release_date?.split("-")
@@ -169,30 +231,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                 }
 
             }
-            albumsAll.sortWith { p0, p1 ->
-                val calender0 = Calendar.getInstance()
-                val calender1 = Calendar.getInstance()
-                val date0 = p0.formattedDate!!.split("/")
-                val date1 = p1.formattedDate!!.split("/")
-
-                calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                calender0.set(Calendar.MONTH, date0[1].toInt())
-                calender1.set(Calendar.MONTH, date1[1].toInt())
-                calender0.set(Calendar.YEAR, date0[2].toInt())
-                calender1.set(Calendar.YEAR, date1[2].toInt())
-                when {
-                    calender0.compareTo(calender1) == 1 -> {
-                        -1
-                    }
-                    calender0.compareTo(calender1) == -1 -> {
-                        1
-                    }
-                    else -> {
-                        0
-                    }
-                }
-            }
+            viewModel.sortWith(albumsAll)
             if (binding.swipeRefresh.isRefreshing) {
                 binding.swipeRefresh.isRefreshing = false
             }
@@ -219,30 +258,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                     }
                 }
             }
-            albumsSingle.sortWith { p0, p1 ->
-                val calender0 = Calendar.getInstance()
-                val calender1 = Calendar.getInstance()
-                val date0 = p0.formattedDate!!.split("/")
-                val date1 = p1.formattedDate!!.split("/")
-
-                calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                calender0.set(Calendar.MONTH, date0[1].toInt())
-                calender1.set(Calendar.MONTH, date1[1].toInt())
-                calender0.set(Calendar.YEAR, date0[2].toInt())
-                calender1.set(Calendar.YEAR, date1[2].toInt())
-                when {
-                    calender0.compareTo(calender1) == 1 -> {
-                        -1
-                    }
-                    calender0.compareTo(calender1) == -1 -> {
-                        1
-                    }
-                    else -> {
-                        0
-                    }
-                }
-            }
+            viewModel.sortWith(albumsSingle)
 
             if (!emptyFollowed) {
                 albumAdapterSingle.notifyDataSetChanged()
@@ -268,30 +284,7 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                     }
                 }
             }
-            albumsOnly.sortWith { p0, p1 ->
-                val calender0 = Calendar.getInstance()
-                val calender1 = Calendar.getInstance()
-                val date0 = p0.formattedDate!!.split("/")
-                val date1 = p1.formattedDate!!.split("/")
-
-                calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                calender0.set(Calendar.MONTH, date0[1].toInt())
-                calender1.set(Calendar.MONTH, date1[1].toInt())
-                calender0.set(Calendar.YEAR, date0[2].toInt())
-                calender1.set(Calendar.YEAR, date1[2].toInt())
-                when {
-                    calender0.compareTo(calender1) == 1 -> {
-                        -1
-                    }
-                    calender0.compareTo(calender1) == -1 -> {
-                        1
-                    }
-                    else -> {
-                        0
-                    }
-                }
-            }
+            viewModel.sortWith(albumsOnly)
 
 
             if (!emptyFollowed) {
@@ -308,48 +301,20 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                     album.formattedDate = "01/01/" + splitDate!![0]
                     Log.e("dateNotFound", album.release_date.toString())
                 }
-                var various = false
                 for (library in libraryItems) {
                     if (album.id == library.id) {
                         album.inLibrary = true
                     }
                 }
-                for (artist in album.artists) {
-                    if (artist.name == "Various Artists") {
-                        various = true
-                    }
+
+
+                if (!contains(album, albumsFeatured) && !isVariousArtist(album)) {
+                    albumsFeatured.add(album)
                 }
-                if (!various) {
-                    if (!contains(album, albumsFeatured)) {
-                        albumsFeatured.add(album)
-                    }
-                }
+
             }
 
-            albumsFeatured.sortWith { p0, p1 ->
-                val calender0 = Calendar.getInstance()
-                val calender1 = Calendar.getInstance()
-                val date0 = p0.formattedDate!!.split("/")
-                val date1 = p1.formattedDate!!.split("/")
-
-                calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
-                calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
-                calender0.set(Calendar.MONTH, date0[1].toInt())
-                calender1.set(Calendar.MONTH, date1[1].toInt())
-                calender0.set(Calendar.YEAR, date0[2].toInt())
-                calender1.set(Calendar.YEAR, date1[2].toInt())
-                when {
-                    calender0.compareTo(calender1) == 1 -> {
-                        -1
-                    }
-                    calender0.compareTo(calender1) == -1 -> {
-                        1
-                    }
-                    else -> {
-                        0
-                    }
-                }
-            }
+            viewModel.sortWith(albumsFeatured)
             if (!emptyFollowed) {
                 albumAdapterFeatured.notifyDataSetChanged()
             }
@@ -392,39 +357,9 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
                 albumAdapterFeatured.notifyDataSetChanged()
             }
         })
-        binding.swipeRefresh.setOnRefreshListener {
-            refreshTimeline()
-        }
-        binding.albumRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
-                val total = layoutManager!!.itemCount
-                val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
-                if (currentLastItem == total - 1) {
-                    if (binding.tabLayout.selectedTabPosition == 0) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getAllAlbums(artist.artistId, offsetAll)
-                        }
-
-                    } else if (binding.tabLayout.selectedTabPosition == 1) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getSingleAlbums(artist.artistId, offsetSingle)
-                        }
-                    } else if (binding.tabLayout.selectedTabPosition == 2) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getOnlyAlbums(artist.artistId, offsetOnly)
-                        }
-                    } else if (binding.tabLayout.selectedTabPosition == 3) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getFeaturedAlbums(artist.artistId, offsetFeatured)
-                        }
-                    }
-                }
-
-            }
-        })
     }
+
+
 
     private fun contains(item: AlbumItems, albums: ArrayList<AlbumItems>): Boolean {
 
@@ -516,6 +451,11 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick {
             image
         )
         navHostFragment.navController.navigate(action)
+    }
+
+    override fun onArtistClick(name: String) {
+        launched = false
+        viewModel.searchArtistSpotify(name)
     }
 
 

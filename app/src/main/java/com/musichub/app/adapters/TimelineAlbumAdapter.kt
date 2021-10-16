@@ -15,15 +15,32 @@ import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.FollowedArtist
 import com.musichub.app.models.spotify.ArtistShort
 import com.musichub.app.models.spotify.AlbumItems
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.widget.Toast
+import com.musichub.app.helpers.listeners.OnArtistClick
+import java.lang.IndexOutOfBoundsException
 
-class TimelineAlbumAdapter(private val context:Context, private val items:ArrayList<AlbumItems>, private val artists:ArrayList<FollowedArtist>,private val libraryItems: ArrayList<AlbumItems>,private val listener:RecyclerViewItemClick) : RecyclerView.Adapter<TimelineAlbumAdapter.ViewHolder>() {
+
+class TimelineAlbumAdapter(
+    private val context: Context,
+    private val items: ArrayList<AlbumItems>,
+    private val artists: ArrayList<FollowedArtist>,
+    private val libraryItems: ArrayList<AlbumItems>,
+    private val listener: RecyclerViewItemClick,
+    private val artistClick: OnArtistClick
+) : RecyclerView.Adapter<TimelineAlbumAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_timeline_albums,parent,false))
+        return ViewHolder(
+            LayoutInflater.from(context).inflate(R.layout.item_timeline_albums, parent, false)
+        )
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item=items[position]
+        val item = items[position]
         if (items[position].inLibrary!!) {
             holder.binding?.cardColor = "#4E1E75"
             holder.binding?.libraryText?.setTextColor(Color.parseColor("#FFFFFF"))
@@ -54,27 +71,81 @@ class TimelineAlbumAdapter(private val context:Context, private val items:ArrayL
             }
         }
         holder.binding?.album=item
-        var artists=""
+        var artists = ""
+        val artistArray: ArrayList<String> = ArrayList()
         for (i in 0 until item.artists.size) {
             artists += item.artists[i].name
-            if (i<item.artists.size-1) {
-                artists= "$artists, "
+
+            if (i < item.artists.size - 1) {
+                artists = "$artists, "
+                artistArray.add(item.artists[i].name + " ")
+            } else {
+                artistArray.add(item.artists[i].name)
             }
         }
         artists=artists.trim()
         if (artists[artists.lastIndex] == ',') {
-            artists=artists.substring(0,artists.lastIndex)
+            artists = artists.substring(0, artists.lastIndex)
         }
-        if (item.album_group=="appears_on") {
-            holder.binding?.type?.text="Featured"
-        }
-        else if (item.album_group=="album") {
+        if (item.album_group == "appears_on") {
+            holder.binding?.type?.text = "Featured"
+        } else if (item.album_group == "album") {
             holder.binding?.type?.text = "Album"
         } else if (item.album_group == "single") {
             holder.binding?.type?.text = "Single/EP"
         }
+        val ss = SpannableString(artists)
+        var totalL = 0
 
-        holder.binding?.artists?.text = artists
+        for (i in 0 until artistArray.size) {
+            if (i == 0) {
+                totalL = 0
+            }
+            Log.d("currentLen " + position, totalL.toString() + " " + artists.length)
+
+            try {
+                if (i == (artistArray.size - 1)) {
+                    ss.setSpan(
+                        object : ClickableSpan() {
+                            override fun onClick(p0: View) {
+                                artistClick.onArtistClick(artistArray[i])
+                            }
+
+                        },
+                        artists.length - artistArray[i].length,
+                        artists.length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                } else {
+                    ss.setSpan(
+                        object : ClickableSpan() {
+                            override fun onClick(p0: View) {
+                                artistClick.onArtistClick(artistArray[i])
+                            }
+
+                        },
+                        totalL,
+                        totalL + artistArray[i].length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+
+            } catch (e: IndexOutOfBoundsException) {
+                e.printStackTrace()
+            }
+            totalL += if (i == (artistArray.size - 1)) {
+                artistArray[i].length
+            } else {
+                artistArray[i].length + 1
+            }
+
+
+        }
+
+
+
+        holder.binding?.artists?.text = ss
+        holder.binding?.artists?.movementMethod = LinkMovementMethod.getInstance()
         holder.binding?.item?.setOnClickListener {
             listener.onItemClick(position)
         }
@@ -85,13 +156,13 @@ class TimelineAlbumAdapter(private val context:Context, private val items:ArrayL
                 holder.binding.artist!!.image
             )
         }
-        holder.binding?.artists?.setOnClickListener {
-            listener.onArtistClick(
-                holder.binding.artist!!.name,
-                holder.binding.artist!!.artistId,
-                holder.binding.artist!!.image
-            )
-        }
+//        holder.binding?.artists?.setOnClickListener {
+//            listener.onArtistClick(
+//                holder.binding.artist!!.name,
+//                holder.binding.artist!!.artistId,
+//                holder.binding.artist!!.image
+//            )
+//        }
         holder.binding?.profileImage?.setOnClickListener {
             listener.onArtistClick(
                 holder.binding.artist!!.name,

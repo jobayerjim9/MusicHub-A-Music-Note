@@ -36,6 +36,7 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
     val followedArtists:ArrayList<FollowedArtist> = ArrayList()
     var offset:Int=50
     var term:String=""
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -61,6 +62,7 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
             followedArtists.clear()
             followedArtists.addAll(it)
             artistsShortAdapter.notifyDataSetChanged()
+
         })
         val spanCount = 3
         val spacing = 48
@@ -94,32 +96,42 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
             }
             handled
         }
-        viewModel.spotifyArtists.observe(viewLifecycleOwner,{ artist->
-            binding.artistRecycler.adapter=artistsAdapter
-            binding.descText.visibility = View.GONE
-            offset=artist.offset+50
-            artists.addAll(artist!!.items)
-            artistsAdapter.notifyDataSetChanged()
+        viewModel.spotifyArtists.observe(viewLifecycleOwner, { artist ->
+            term = binding.searchArtist.text.toString()
+            Log.d("artistSearch", "got " + term)
+            if (term.isNotEmpty()) {
+                binding.artistRecycler.adapter = artistsAdapter
+                binding.descText.visibility = View.GONE
+                offset = artist.offset + 50
+                artists.addAll(artist!!.items)
+                artistsAdapter.notifyDataSetChanged()
+            }
         })
-        viewModel.isLoading.observe(viewLifecycleOwner,{
-            binding.loading= it
+        viewModel.isLoading.observe(viewLifecycleOwner, {
+            binding.loading = it
         })
         binding.cancelButton.setOnClickListener {
-            binding.searchArtist.clearFocus()
-            binding.artistRecycler.adapter=artistsShortAdapter
-            artists.clear()
-            term=""
-            artistsAdapter.notifyDataSetChanged()
-            binding.searchArtist.setText("")
+            cancelSearch()
             it.hideKeyboard()
-
         }
 
     }
+
+    private fun cancelSearch() {
+        binding.searchArtist.clearFocus()
+        binding.artistRecycler.adapter = artistsShortAdapter
+        artists.clear()
+        term = ""
+        artistsAdapter.notifyDataSetChanged()
+        binding.searchArtist.setText("")
+
+    }
+
     fun View.hideKeyboard() {
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(windowToken, 0)
     }
+
     override fun onResume() {
         super.onResume()
         viewModel.getFollowedArtist()

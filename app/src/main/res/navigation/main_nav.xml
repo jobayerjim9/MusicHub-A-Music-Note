@@ -110,6 +110,9 @@
         <action
             android:id="@+id/action_trackDetailsFragment_to_artistDetailsFragment"
             app:destination="@id/artistDetailsFragment" />
+        <action
+            android:id="@+id/action_trackDetailsFragment_to_albumDetailsFragment"
+            app:destination="@id/albumDetailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/fullBioFragment"

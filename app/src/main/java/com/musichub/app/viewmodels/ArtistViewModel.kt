@@ -23,7 +23,9 @@ import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import java.io.IOException
 import java.lang.Exception
+import java.util.*
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 @HiltViewModel
@@ -38,8 +40,8 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
     val artistSocialMedia: MutableLiveData<ArtistSocialMedia> = MutableLiveData()
     val followedArtist : MutableLiveData<List<FollowedArtist>> = MutableLiveData()
     val libraryItems : MutableLiveData<List<AlbumItems>> = MutableLiveData()
-    val isFollowed : MutableLiveData<Boolean> = MutableLiveData()
-
+    val isFollowed: MutableLiveData<Boolean> = MutableLiveData()
+    val foundArtist: MutableLiveData<SpotifyArtistItem> = MutableLiveData()
     fun searchArtist(term:String,offset:Int) {
         Log.d("searchArtistViewModel",offset.toString())
         isLoading.postValue(true)
@@ -318,27 +320,29 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onError(e: Throwable) {
-                    val code=(e as HttpException).code()
-                    if (code==401) {
-                        repo.spotifyAuth()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object : SingleObserver<OAuthResponse> {
-                                override fun onSubscribe(d: Disposable) {
+                    if (e is HttpException) {
+                        val code = (e as HttpException).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
 
-                                }
+                                    }
 
-                                override fun onError(e: Throwable) {
+                                    override fun onError(e: Throwable) {
 
-                                }
+                                    }
 
-                                override fun onSuccess(t: OAuthResponse) {
-                                    repo.saveSpotifyToken(t.access_token, t.token_type)
-                                    getOnlyAlbums(id, offset)
-                                }
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        getOnlyAlbums(id, offset)
+                                    }
 
 
-                            })
+                                })
+                        }
                     }
                 }
 
@@ -419,17 +423,102 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.e("onErrorGeniusArtist",e.message!!)
+                    Log.e("onErrorGeniusArtist", e.message!!)
                 }
 
             })
     }
-    fun followArtist(artistId:String,name:String,image:String) {
-        repo.followArtist(artistId,name,image)
+
+    fun searchArtistSpotify(term: String) {
+        repo.searchArtist(term, 0)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<SpotifyArtistResponse> {
+                override fun onSubscribe(d: Disposable) {
+
+                }
+
+
+                override fun onError(e: Throwable) {
+                    if (e is HttpException) {
+                        val code = (e).code()
+                        if (code == 401) {
+                            repo.spotifyAuth()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object : SingleObserver<OAuthResponse> {
+                                    override fun onSubscribe(d: Disposable) {
+
+                                    }
+
+                                    override fun onError(e: Throwable) {
+
+                                    }
+
+                                    override fun onSuccess(t: OAuthResponse) {
+                                        repo.saveSpotifyToken(t.access_token, t.token_type)
+                                        searchArtistSpotify(term)
+                                    }
+
+
+                                })
+                        }
+                    }
+                }
+
+                override fun onNext(t: SpotifyArtistResponse) {
+                    for (artist in t.artists.items) {
+                        if (artist.name.lowercase().trim() == term.lowercase().trim()) {
+                            foundArtist.postValue(artist)
+                            break
+                        }
+                    }
+                }
+
+                override fun onComplete() {
+
+                }
+
+            })
     }
-    fun unfollowArtist(artistId:String) {
+
+    fun sortWith(album: ArrayList<AlbumItems>) {
+        album.sortWith { p0, p1 ->
+            val calender0 = Calendar.getInstance()
+            val calender1 = Calendar.getInstance()
+            val date0 = p0.formattedDate!!.split("/")
+            val date1 = p1.formattedDate!!.split("/")
+
+            calender0.set(Calendar.DAY_OF_MONTH, date0[0].toInt())
+            calender1.set(Calendar.DAY_OF_MONTH, date1[0].toInt())
+            calender0.set(Calendar.MONTH, date0[1].toInt())
+            calender1.set(Calendar.MONTH, date1[1].toInt())
+            calender0.set(Calendar.YEAR, date0[2].toInt())
+            calender1.set(Calendar.YEAR, date1[2].toInt())
+            when {
+                calender0.compareTo(calender1) == 1 -> {
+                    -1
+                }
+                calender0.compareTo(calender1) == -1 -> {
+                    1
+                }
+                else -> {
+                    0
+                }
+            }
+        }
+
+
+    }
+
+    fun followArtist(artistId: String, name: String, image: String) {
+        repo.followArtist(artistId, name, image)
+    }
+
+    fun unfollowArtist(artistId: String) {
         repo.unfollowArtist(artistId)
     }
+
     fun getFollowedArtist() {
         thread {
             val artists=appDatabase.roomDao().getAllFollowedArtist()

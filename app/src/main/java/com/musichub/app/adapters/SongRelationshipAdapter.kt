@@ -10,11 +10,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.musichub.app.R
 
 import com.musichub.app.databinding.ItemSongRelationshipsBinding
+import com.musichub.app.helpers.listeners.RelationshipItemClick
 import com.musichub.app.models.genius.SongRelationships
 
 class SongRelationshipAdapter(
     private val context: Context,
-    private val relationships: ArrayList<SongRelationships>
+    private val relationships: ArrayList<SongRelationships>,
+    private val listener: RelationshipItemClick
 ) :
     RecyclerView.Adapter<SongRelationshipAdapter.ViewHolder>() {
 
@@ -34,7 +36,7 @@ class SongRelationshipAdapter(
                 relationships[position].relationship_type.uppercase().replace("_", " ")
             holder.binding?.relationShipItems?.layoutManager = LinearLayoutManager(context)
             holder.binding?.relationShipItems?.adapter =
-                RelationshipItemAdapter(context, relationships[position].songs)
+                RelationshipItemAdapter(context, relationships[position].songs, listener)
         } else {
             holder.binding?.item?.visibility = View.GONE
         }
