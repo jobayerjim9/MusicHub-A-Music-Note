@@ -123,36 +123,39 @@ class LibraryFragment : Fragment() , RecyclerViewItemClick {
         })
         artistViewModel.getLibraryItems()
         viewModel.albums.observe(viewLifecycleOwner,{
-            offset=it.offset+50
-            albumsAll.addAll(it.items)
-            for (album in it.items) {
-                if (album.album_type=="single") {
-                    albumsSingle.add(album)
+            term = binding.searchSpotify.text.toString()
+            if (term.isNotEmpty()) {
+                offset = it.offset + 50
+                albumsAll.addAll(it.items)
+                for (album in it.items) {
+                    if (album.album_type == "single") {
+                        albumsSingle.add(album)
+                    } else if (album.album_type == "compilation") {
+                        albumsCompilation.add(album)
+                    }
                 }
-                else if (album.album_type == "compilation") {
-                    albumsCompilation.add(album)
-                }
+                libraryAdapterAll.notifyDataSetChanged()
+                libraryAdapterSingle.notifyDataSetChanged()
+                libraryAdapterOnly.notifyDataSetChanged()
+                libraryAdapterCompilation.notifyDataSetChanged()
             }
-            libraryAdapterAll.notifyDataSetChanged()
-            libraryAdapterSingle.notifyDataSetChanged()
-            libraryAdapterOnly.notifyDataSetChanged()
-            libraryAdapterCompilation.notifyDataSetChanged()
         })
-        viewModel.tracks.observe(viewLifecycleOwner,{
-            offset=it.offset+50
-            tracksAll.addAll(it.items)
-            for (track in it.items) {
-                if (track.album.album_type=="single") {
-                    tracksSingle.add(track)
+        viewModel.tracks.observe(viewLifecycleOwner, {
+            if (term.isNotEmpty()) {
+                offset = it.offset + 50
+                tracksAll.addAll(it.items)
+                for (track in it.items) {
+                    if (track.album.album_type == "single") {
+                        tracksSingle.add(track)
+                    } else if (track.album.album_type == "compilation") {
+                        tracksCompilation.add(track)
+                    }
                 }
-                else if (track.album.album_type == "compilation") {
-                    tracksCompilation.add(track)
-                }
+                libraryAdapterAll.notifyDataSetChanged()
+                libraryAdapterSingle.notifyDataSetChanged()
+                libraryAdapterOnly.notifyDataSetChanged()
+                libraryAdapterCompilation.notifyDataSetChanged()
             }
-            libraryAdapterAll.notifyDataSetChanged()
-            libraryAdapterSingle.notifyDataSetChanged()
-            libraryAdapterOnly.notifyDataSetChanged()
-            libraryAdapterCompilation.notifyDataSetChanged()
 
         })
         binding.tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
@@ -181,29 +184,36 @@ class LibraryFragment : Fragment() , RecyclerViewItemClick {
 
         })
         binding.cancelButton.setOnClickListener {
-            albumsAll.clear()
-            albumsSingle.clear()
-            albumsCompilation.clear()
-            tracksAll.clear()
-            tracksAlbum.clear()
-            tracksSingle.clear()
-            tracksCompilation.clear()
-            binding.searchSpotify.clearFocus()
+            cancelSearch()
             it.hideKeyboard()
-            term=""
-            binding.searchSpotify.setText(term)
-            artistViewModel.getLibraryItems()
-            Log.d("libraryCleared","cleared")
         }
-        viewModel.loading.observe(viewLifecycleOwner,{
-            binding.loading=it
+        viewModel.loading.observe(viewLifecycleOwner, {
+            binding.loading = it
         })
 
     }
+
+    private fun cancelSearch() {
+        albumsAll.clear()
+        albumsSingle.clear()
+        albumsCompilation.clear()
+        tracksAll.clear()
+        tracksAlbum.clear()
+        tracksSingle.clear()
+        tracksCompilation.clear()
+        binding.searchSpotify.clearFocus()
+
+        term = ""
+        binding.searchSpotify.setText(term)
+        artistViewModel.getLibraryItems()
+        Log.d("libraryCleared", "cleared")
+    }
+
     fun View.hideKeyboard() {
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(windowToken, 0)
     }
+
     override fun onItemClick(position: Int) {
         if (binding.tabLayout.selectedTabPosition == 0) {
             if (tracksAll.isNotEmpty()) {

@@ -73,6 +73,9 @@
         <action
             android:id="@+id/action_artistDetailsFragment_to_fullBioFragment2"
             app:destination="@id/fullBioFragment" />
+        <action
+            android:id="@+id/action_artistDetailsFragment_self"
+            app:destination="@id/artistDetailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/albumDetailsFragment"

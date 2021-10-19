@@ -21,6 +21,7 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.widget.Toast
 import com.musichub.app.helpers.listeners.OnArtistClick
+import java.lang.Exception
 import java.lang.IndexOutOfBoundsException
 
 
@@ -101,7 +102,6 @@ class TimelineAlbumAdapter(
             if (i == 0) {
                 totalL = 0
             }
-            Log.d("currentLen " + position, totalL.toString() + " " + artists.length)
 
             try {
                 if (i == (artistArray.size - 1)) {
@@ -131,7 +131,22 @@ class TimelineAlbumAdapter(
                 }
 
             } catch (e: IndexOutOfBoundsException) {
-                e.printStackTrace()
+                try {
+                    ss.setSpan(
+                        object : ClickableSpan() {
+                            override fun onClick(p0: View) {
+                                artistClick.onArtistClick(artistArray[i])
+                            }
+
+                        },
+                        0,
+                        artists.length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
             }
             totalL += if (i == (artistArray.size - 1)) {
                 artistArray[i].length

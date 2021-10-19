@@ -24,6 +24,7 @@ import com.google.android.material.tabs.TabLayout
 import com.musichub.app.R
 import com.musichub.app.adapters.AlbumAdapter
 import com.musichub.app.databinding.FragmentArtistDetailsBinding
+import com.musichub.app.helpers.listeners.OnArtistClick
 import com.musichub.app.helpers.listeners.RecyclerViewItemClick
 import com.musichub.app.models.spotify.ArtistShort
 import com.musichub.app.models.spotify.AlbumItems
@@ -35,24 +36,25 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 @AndroidEntryPoint
-class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
+class ArtistDetailsFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
     private val args: ArtistDetailsFragmentArgs by navArgs()
     private lateinit var viewModel: ArtistViewModel
     lateinit var binding: FragmentArtistDetailsBinding
-    private val albumsAll:ArrayList<AlbumItems> = ArrayList()
-    private val albumsSingle:ArrayList<AlbumItems> = ArrayList()
-    private val albumsFeatured:ArrayList<AlbumItems> = ArrayList()
-    private val albumsOnly:ArrayList<AlbumItems> = ArrayList()
-    var offsetAll=0
-    var offsetSingle=0
-    var offsetFeatured=0
+    private val albumsAll: ArrayList<AlbumItems> = ArrayList()
+    private val albumsSingle: ArrayList<AlbumItems> = ArrayList()
+    private val albumsFeatured: ArrayList<AlbumItems> = ArrayList()
+    private val albumsOnly: ArrayList<AlbumItems> = ArrayList()
+    var offsetAll = 0
+    var offsetSingle = 0
+    var offsetFeatured = 0
     var offsetOnly=0
     lateinit var albumAdapterAll:AlbumAdapter
     lateinit var albumAdapterSingle:AlbumAdapter
     lateinit var albumAdapterFeatured:AlbumAdapter
     lateinit var albumAdapterAlbum:AlbumAdapter
     lateinit var navHostFragment: NavHostFragment
-    private val libraryItems:ArrayList<AlbumItems> = ArrayList()
+    private val libraryItems: ArrayList<AlbumItems> = ArrayList()
+    var launched = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -125,11 +127,11 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
             }
 
         })
-        albumAdapterAll = AlbumAdapter(requireContext(), albumsAll, artist, this)
+        albumAdapterAll = AlbumAdapter(requireContext(), albumsAll, artist, this, this)
         binding.albumRecycler.adapter = albumAdapterAll
-        albumAdapterSingle = AlbumAdapter(requireContext(), albumsSingle, artist, this)
-        albumAdapterAlbum = AlbumAdapter(requireContext(), albumsOnly, artist, this)
-        albumAdapterFeatured = AlbumAdapter(requireContext(), albumsFeatured, artist, this)
+        albumAdapterSingle = AlbumAdapter(requireContext(), albumsSingle, artist, this, this)
+        albumAdapterAlbum = AlbumAdapter(requireContext(), albumsOnly, artist, this, this)
+        albumAdapterFeatured = AlbumAdapter(requireContext(), albumsFeatured, artist, this, this)
 
         binding.albumRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -375,6 +377,28 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
                 albumAdapterFeatured.notifyDataSetChanged()
             }
         })
+        viewModel.foundArtist.observe(viewLifecycleOwner, {
+            if (!launched) {
+                if (it.images!!.isNotEmpty()) {
+                    val action =
+                        ArtistDetailsFragmentDirections.actionArtistDetailsFragmentSelf(
+                            it.name,
+                            it.id,
+                            it.images[0].url
+                        )
+                    navHostFragment.navController.navigate(action)
+                } else {
+                    val action =
+                        ArtistDetailsFragmentDirections.actionArtistDetailsFragmentSelf(
+                            it.name,
+                            it.id,
+                            ""
+                        )
+                    navHostFragment.navController.navigate(action)
+                }
+                launched = true
+            }
+        })
     }
 
     companion object {
@@ -460,6 +484,11 @@ class ArtistDetailsFragment : Fragment() , RecyclerViewItemClick {
 
     override fun onArtistClick(name: String, id: String, image: String) {
 
+    }
+
+    override fun onArtistClick(name: String) {
+        launched = false
+        viewModel.searchArtistSpotify(name)
     }
 
 

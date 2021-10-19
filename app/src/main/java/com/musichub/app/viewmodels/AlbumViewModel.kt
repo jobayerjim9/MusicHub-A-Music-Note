@@ -128,7 +128,7 @@ class AlbumViewModel @Inject constructor(private val repo: MusicHubRepositories)
     }
 
     fun searchTrackOnGenius(term: String,artistName:String) {
-        var finalterm = term.substringBefore("(").trim()
+        var finalterm = term.substringBefore("(").trim().substringBefore("-").trim()
         finalterm = finalterm.replace(".", "").replace("-", "").replace(";", "").replace("  ", " ")
         repo.searchOnGenius("$finalterm $artistName")
             .subscribeOn(Schedulers.io())

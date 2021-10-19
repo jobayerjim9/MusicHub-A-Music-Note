@@ -73,7 +73,12 @@ class TrackDetailsFragment : Fragment(), OnArtistClick, RelationshipItemClick {
         viewModel.getSongBio(args.songId)
         viewModel.getSongDetails(args.songId)
         viewModel.songBio.observe(viewLifecycleOwner,{
-            binding.bio=it
+            if (it.length == 1) {
+                binding.bio = "No bio on Genius"
+            } else {
+                binding.bio = it
+            }
+
         })
         viewModel.song.observe(viewLifecycleOwner,{
             populateSongInfo(it)
