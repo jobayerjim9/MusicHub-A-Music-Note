@@ -4,9 +4,16 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.musichub.app.helpers.room.AppDatabase
+import com.musichub.app.models.FirebaseUserModel
 import com.musichub.app.models.FollowedArtist
 import com.musichub.app.models.SpotifyError
 import com.musichub.app.models.auth.OAuthResponse
@@ -513,6 +520,23 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
 
     fun followArtist(artistId: String, name: String, image: String) {
         repo.followArtist(artistId, name, image)
+        val database = FirebaseDatabase.getInstance().reference.child("userInfo")
+            .child(Firebase.auth.uid.toString())
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FirebaseUserModel::class.java)
+                val artists: ArrayList<String> = ArrayList()
+                if (!data?.followedArtists!!.isNullOrEmpty()) {
+                    artists.addAll(data.followedArtists)
+                }
+                artists.add(artistId)
+                database.child("followedArtists").setValue(artists)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
     }
 
     fun unfollowArtist(artistId: String) {

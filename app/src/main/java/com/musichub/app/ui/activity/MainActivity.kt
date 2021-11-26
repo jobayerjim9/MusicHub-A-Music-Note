@@ -10,6 +10,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.musichub.app.R
 import com.musichub.app.databinding.ActivityMainBinding
 import com.musichub.app.models.constants.ApiConstants
@@ -33,54 +35,65 @@ class MainActivity : AppCompatActivity() {
     private fun initView() {
         baseViewModel = ViewModelProvider(this).get(BaseViewModel::class.java)
         artistViewModel = ViewModelProvider(this).get(ArtistViewModel::class.java)
-
-        navOptions =  NavOptions.Builder()
+        val auth = Firebase.auth
+        Log.d("firebaseUserUid", auth.uid!!)
+        navOptions = NavOptions.Builder()
             .setEnterAnim(android.R.anim.slide_in_left)
             .setExitAnim(android.R.anim.slide_out_right)
             .build()
-        navHostFragment=supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
+        navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
         binding.bottomNavigationView.setupWithNavController(navHostFragment.navController)
 //        binding.button.setOnClickListener {
 //            val intent= Intent(this,WebViewActivity::class.java)
 //            intent.putExtra("url",ApiConstants.GENIUS_OAUTH_URL)
 //            startActivity(intent)
 //        }
-        baseViewModel.spotifyArtistItem.observe(this,{
-            val bundle=Bundle()
-            bundle.putString("name",it.name)
-            bundle.putString("artistId",it.id)
+        baseViewModel.updateNotificationToken()
+        baseViewModel.spotifyArtistItem.observe(this, {
+            val bundle = Bundle()
+            bundle.putString("name", it.name)
+            bundle.putString("artistId", it.id)
             if (it.images!!.isNotEmpty()) {
                 bundle.putString("image", it.images!![0].url)
-            }
-            else {
+            } else {
                 bundle.putString("image", "")
             }
-            binding.loading=false
-            navHostFragment.navController.navigate(R.id.artistDetailsFragment,bundle,navOptions)
+            binding.loading = false
+            navHostFragment.navController.navigate(R.id.artistDetailsFragment, bundle, navOptions)
         })
-        baseViewModel.albumItem.observe(this,{
-            val bundle=Bundle()
-            bundle.putParcelable("albumIten",it)
-            bundle.putString("artistName",it.artists[0].name)
-            binding.loading=false
-            navHostFragment.navController.navigate(R.id.albumDetailsFragment,bundle,navOptions)
+        baseViewModel.albumItem.observe(this, {
+            val bundle = Bundle()
+            bundle.putParcelable("albumIten", it)
+            bundle.putString("artistName", it.artists[0].name)
+            binding.loading = false
+            navHostFragment.navController.navigate(R.id.albumDetailsFragment, bundle, navOptions)
         })
-
-    }
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        val segments = intent?.data?.pathSegments
-        if (segments!![segments.size-2] == "artist") {
-            binding.loading=true
-            baseViewModel.getSpotifyArtistById(segments!![segments.size-1])
+        val albumId = intent.getStringExtra("albumId")
+        if (!albumId.isNullOrEmpty()) {
+            Log.d("albumIdFound", albumId)
+            baseViewModel.getAlbumById(albumId)
         }
-        else if (segments!![segments.size-2] == "album") {
-            binding.loading=true
-            baseViewModel.getAlbumById(segments!![segments.size-1])
+        val artistId = intent.getStringExtra("artistId")
+        if (!artistId.isNullOrEmpty()) {
+            baseViewModel.getSpotifyArtistById(artistId)
         }
 
-        //navHostFragment.navController.navigate(Uri.parse(intent?.data.toString()))
 
     }
+//    override fun onNewIntent(intent: Intent?) {
+//        super.onNewIntent(intent)
+//        val segments = intent?.data?.pathSegments
+//        if (segments!![segments.size-2] == "artist") {
+//            binding.loading=true
+//            baseViewModel.getSpotifyArtistById(segments!![segments.size-1])
+//        }
+//        else if (segments!![segments.size-2] == "album") {
+//            binding.loading=true
+//            baseViewModel.getAlbumById(segments!![segments.size-1])
+//        }
+//        //navHostFragment.navController.navigate(Uri.parse(intent?.data.toString()))
+//
+//    }
 
 }

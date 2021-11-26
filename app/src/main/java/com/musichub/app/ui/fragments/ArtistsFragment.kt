@@ -48,7 +48,7 @@ class ArtistsFragment : Fragment(),RecyclerViewItemClick {
     }
 
     private fun initView() {
-        Log.d("initView","initView")
+        Log.d("initView", "ArtistFragment")
         viewModel=ViewModelProvider(this).get(ArtistViewModel::class.java)
         viewModel.getFollowedArtist()
         artistsAdapter= ArtistsAdapter(requireContext(),artists,this)

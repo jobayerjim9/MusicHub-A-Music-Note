@@ -3,6 +3,11 @@ package com.musichub.app.viewmodels
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.musichub.app.models.auth.OAuthResponse
 import com.musichub.app.models.spotify.AlbumItems
 import com.musichub.app.models.spotify.SpotifyArtistItem
@@ -19,10 +24,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BaseViewModel @Inject constructor(private val repo: MusicHubRepositories) : ViewModel() {
-    val spotifyToken : MutableLiveData<OAuthResponse> = MutableLiveData()
+    val spotifyToken: MutableLiveData<OAuthResponse> = MutableLiveData()
     var mDisposable: CompositeDisposable = CompositeDisposable()
-    val albumItem : MutableLiveData<AlbumItems> = MutableLiveData()
+    val albumItem: MutableLiveData<AlbumItems> = MutableLiveData()
     val spotifyArtistItem: MutableLiveData<SpotifyArtistItem> = MutableLiveData()
+    fun updateNotificationToken() {
+        FirebaseMessaging.getInstance().token.addOnSuccessListener {
+            val ref = FirebaseDatabase.getInstance().reference.child("userInfo")
+                .child(Firebase.auth.uid.toString()).child("notificationToken")
+            ref.setValue(it)
+        }
+    }
+
     fun authSpotify() {
         repo.spotifyAuth()
             .subscribeOn(Schedulers.io())

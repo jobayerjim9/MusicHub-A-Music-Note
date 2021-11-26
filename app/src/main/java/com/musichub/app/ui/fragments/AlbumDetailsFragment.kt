@@ -147,7 +147,8 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
         }
         binding.share.setOnClickListener {
             val shareIntent = Intent()
-            val text="Checkout "+albumItems.name+" On MusicHub:- "+"https://musichub.com/album/"+albumItems.id
+            val text =
+                "Checkout " + albumItems.name + " On MusicHub:- " + "https://musichub.digital/album/" + albumItems.id
             shareIntent.action = Intent.ACTION_SEND
             shareIntent.type="text/plain"
             shareIntent.putExtra(Intent.EXTRA_TEXT,text )

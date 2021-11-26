@@ -3,6 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/drawable/ic_baseline_pause_24.xml" value="0.16666666666666666" />
+        <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/drawable/ic_baseline_play_arrow_24.xml" value="0.16666666666666666" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/activity_main.xml" value="0.5" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/activity_splash.xml" value="0.22" />
         <entry key="..\:/AndroidAppDevelopment/MusicHub/app/src/main/res/layout/activity_web_view.xml" value="0.3233695652173913" />
