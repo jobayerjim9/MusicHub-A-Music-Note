@@ -28,16 +28,7 @@ class LatestDeviceNotification(base: Context?) :
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {
         val notificationChannel =
-            NotificationChannel(Channel_Id, Channel_Name, NotificationManager.IMPORTANCE_HIGH)
-        notificationChannel.enableLights(true)
-        notificationChannel.enableVibration(true)
-        val defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val audioAttributes = AudioAttributes.Builder()
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .build()
-        notificationChannel.setSound(defaultSound, audioAttributes)
-
+            NotificationChannel(Channel_Id, Channel_Name, NotificationManager.IMPORTANCE_MAX)
         notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         manager!!.createNotificationChannel(notificationChannel)
     }

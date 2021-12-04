@@ -8,6 +8,7 @@ import android.os.Build
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.musichub.app.helpers.PrefManager
 import com.musichub.app.ui.activity.SplashActivity
 import java.util.*
 
@@ -18,17 +19,17 @@ class MyMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(p0: RemoteMessage) {
         super.onMessageReceived(p0)
-        sentNotification(p0)
+        if (PrefManager(this).isNotificationEnabled()) {
+            sentNotification(p0)
+        }
     }
 
     private fun sentNotification(remoteMessage: RemoteMessage) {
         var tittle = "MusicHub"
         var body = "Notification"
-        var albumId = ""
         if (remoteMessage.data.isNotEmpty()) {
             tittle = remoteMessage.data["title"]!!
             body = remoteMessage.data["body"]!!
-            albumId = remoteMessage.data["albumId"]!!
             Log.d("notificationPayLoad", remoteMessage.data.toString())
         } else {
             tittle = remoteMessage.notification!!.title!!
@@ -36,14 +37,14 @@ class MyMessagingService : FirebaseMessagingService() {
             Log.d("notificationData", remoteMessage.data.toString())
         }
         val intent = Intent(this, SplashActivity::class.java)
-        val stackBuilder = TaskStackBuilder.create(this)
-        stackBuilder.addNextIntentWithParentStack(intent)
         intent.putExtra("tittle", tittle)
         intent.putExtra("body", body)
-        intent.putExtra("albumId", albumId)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val j = Random().nextInt()
-        val pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(
+            getApplicationContext(), j, intent,
+            PendingIntent.FLAG_ONE_SHOT
+        )
 
         val defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

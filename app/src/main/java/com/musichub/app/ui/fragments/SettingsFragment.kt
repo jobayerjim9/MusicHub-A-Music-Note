@@ -14,6 +14,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.musichub.app.BuildConfig
 import com.musichub.app.R
 import com.musichub.app.databinding.FragmentSettingsBinding
+import com.musichub.app.helpers.PrefManager
 import com.musichub.app.viewmodels.AlbumViewModel
 import com.musichub.app.viewmodels.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -82,13 +83,17 @@ class SettingsFragment : Fragment() {
             startActivity(intent)
         }
         binding.tip.setOnClickListener {
-            val items = arrayOf("Snack Tip", "Lunch Tip", "Big Tip","Cancel")
+            val items = arrayOf("Snack Tip", "Lunch Tip", "Big Tip", "Cancel")
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Tip")
                 .setItems(items) { dialog, which ->
                     //dialog.dismiss()
                 }
                 .show()
+        }
+        binding.notificationToggle.isChecked = PrefManager(requireContext()).isNotificationEnabled()
+        binding.notificationToggle.setOnCheckedChangeListener { buttonView, isChecked ->
+            PrefManager(requireContext()).saveNotificationEnabled(isChecked)
         }
 
 

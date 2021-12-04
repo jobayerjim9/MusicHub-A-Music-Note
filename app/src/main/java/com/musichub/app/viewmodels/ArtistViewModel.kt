@@ -541,6 +541,23 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
 
     fun unfollowArtist(artistId: String) {
         repo.unfollowArtist(artistId)
+        val database = FirebaseDatabase.getInstance().reference.child("userInfo")
+            .child(Firebase.auth.uid.toString())
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FirebaseUserModel::class.java)
+                val artists: ArrayList<String> = ArrayList()
+                if (!data?.followedArtists!!.isNullOrEmpty()) {
+                    artists.addAll(data.followedArtists)
+                }
+                artists.remove(artistId)
+                database.child("followedArtists").setValue(artists)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
     }
 
     fun getFollowedArtist() {

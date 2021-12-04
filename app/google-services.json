@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "831256057201",
+    "firebase_url": "https://musichub-app-default-rtdb.firebaseio.com",
+    "project_id": "musichub-app",
+    "storage_bucket": "musichub-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831256057201:android:f323d4416f6986e67a92d0",
+        "android_client_info": {
+          "package_name": "com.musichub.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "831256057201-nt6jnbdmabm1c3opivs17n3ehtj5prh3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmMMr-yZPOxm3nsCyXRJpZ16pebBOEeoI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "831256057201-nt6jnbdmabm1c3opivs17n3ehtj5prh3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

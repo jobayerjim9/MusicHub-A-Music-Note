@@ -51,23 +51,37 @@ class MainActivity : AppCompatActivity() {
 //        }
         baseViewModel.updateNotificationToken()
         baseViewModel.spotifyArtistItem.observe(this, {
-            val bundle = Bundle()
-            bundle.putString("name", it.name)
-            bundle.putString("artistId", it.id)
-            if (it.images!!.isNotEmpty()) {
-                bundle.putString("image", it.images!![0].url)
-            } else {
-                bundle.putString("image", "")
+            if (it != null) {
+                val bundle = Bundle()
+                bundle.putString("name", it.name)
+                bundle.putString("artistId", it.id)
+                if (it.images!!.isNotEmpty()) {
+                    bundle.putString("image", it.images!![0].url)
+                } else {
+                    bundle.putString("image", "")
+                }
+                binding.loading = false
+                navHostFragment.navController.navigate(
+                    R.id.artistDetailsFragment,
+                    bundle,
+                    navOptions
+                )
+                baseViewModel.spotifyArtistItem.postValue(null)
             }
-            binding.loading = false
-            navHostFragment.navController.navigate(R.id.artistDetailsFragment, bundle, navOptions)
         })
         baseViewModel.albumItem.observe(this, {
-            val bundle = Bundle()
-            bundle.putParcelable("albumIten", it)
-            bundle.putString("artistName", it.artists[0].name)
-            binding.loading = false
-            navHostFragment.navController.navigate(R.id.albumDetailsFragment, bundle, navOptions)
+            if (it != null) {
+                val bundle = Bundle()
+                bundle.putParcelable("albumIten", it)
+                bundle.putString("artistName", it.artists[0].name)
+                binding.loading = false
+                navHostFragment.navController.navigate(
+                    R.id.albumDetailsFragment,
+                    bundle,
+                    navOptions
+                )
+                baseViewModel.albumItem.postValue(null)
+            }
         })
         val albumId = intent.getStringExtra("albumId")
         if (!albumId.isNullOrEmpty()) {

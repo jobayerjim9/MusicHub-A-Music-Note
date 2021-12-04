@@ -30,6 +30,7 @@ class BaseViewModel @Inject constructor(private val repo: MusicHubRepositories) 
     val spotifyArtistItem: MutableLiveData<SpotifyArtistItem> = MutableLiveData()
     fun updateNotificationToken() {
         FirebaseMessaging.getInstance().token.addOnSuccessListener {
+            Log.d("token", it)
             val ref = FirebaseDatabase.getInstance().reference.child("userInfo")
                 .child(Firebase.auth.uid.toString()).child("notificationToken")
             ref.setValue(it)
