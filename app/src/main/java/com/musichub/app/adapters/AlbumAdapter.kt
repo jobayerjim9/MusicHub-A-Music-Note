@@ -20,6 +20,9 @@ import com.musichub.app.models.spotify.ArtistShort
 import com.musichub.app.models.spotify.AlbumItems
 import java.lang.Exception
 import java.lang.IndexOutOfBoundsException
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class AlbumAdapter(
     private val context: Context,
@@ -37,13 +40,22 @@ class AlbumAdapter(
         val item = items[position]
         holder.binding?.artist = artist
         holder.binding?.album = items[position]
+        val format = SimpleDateFormat("yyyy-MM-dd")
+        val releaseDate = Calendar.getInstance()
+        releaseDate.time = format.parse(item.release_date!!)!!
+        val now = Calendar.getInstance()
+        if (releaseDate.after(now)) {
+            holder.binding?.comingSoonLabel?.visibility = View.VISIBLE
+        } else {
+            holder.binding?.comingSoonLabel?.visibility = View.GONE
+        }
         if (items[position].inLibrary!!) {
             holder.binding?.cardColor = "#4E1E75"
             holder.binding?.libraryText?.setTextColor(Color.parseColor("#FFFFFF"))
             holder.binding?.libraryText?.text = "✔ Library"
             holder.binding?.addToLibrary?.setOnClickListener {
                 listener.onRemoveFromLibrary(item)
-                items[position].inLibrary=false
+                items[position].inLibrary = false
                 notifyItemChanged(position)
             }
         }
@@ -55,7 +67,6 @@ class AlbumAdapter(
                 listener.onAddToLibrary(item)
                 items[position].inLibrary=true
                 notifyItemChanged(position)
-
             }
         }
         var artists = ""

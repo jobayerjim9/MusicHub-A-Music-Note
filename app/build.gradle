@@ -96,7 +96,7 @@ dependencies {
     implementation 'de.hdodenhof:circleimageview:3.1.0'
 
 
-    def room_version = "2.3.0"
+    def room_version = "2.4.0"
 
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor "androidx.room:room-compiler:$room_version"

@@ -26,6 +26,9 @@ import com.musichub.app.models.spotify.TrackItems
 import com.musichub.app.viewmodels.AlbumViewModel
 import com.musichub.app.viewmodels.ArtistViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 @AndroidEntryPoint
 class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
@@ -53,19 +56,28 @@ class AlbumDetailsFragment : Fragment(), RecyclerViewItemClick {
     }
 
     private fun initView() {
-
-        progress=ProgressDialog(requireContext())
+        progress = ProgressDialog(requireContext())
         progress.setTitle("Searching...!")
         progress.setMessage("Searching Track Details On Genius.com")
-        navHostFragment=requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
-        viewModel= ViewModelProvider(this).get(AlbumViewModel::class.java)
-        artistViewModel= ViewModelProvider(this).get(ArtistViewModel::class.java)
+        navHostFragment =
+            requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHost) as NavHostFragment
+        viewModel = ViewModelProvider(this).get(AlbumViewModel::class.java)
+        artistViewModel = ViewModelProvider(this).get(ArtistViewModel::class.java)
         albumItems = args.albumIten
+        val format = SimpleDateFormat("yyyy-MM-dd")
+        val releaseDate = Calendar.getInstance()
+        releaseDate.time = format.parse(albumItems.release_date!!)!!
+        val now = Calendar.getInstance()
+        if (releaseDate.after(now)) {
+            binding.comingSoonLabel.visibility = View.VISIBLE
+        } else {
+            binding.comingSoonLabel.visibility = View.GONE
+        }
         artistViewModel.getLibraryItems()
-        artistViewModel.libraryItems.observe(viewLifecycleOwner,{
+        artistViewModel.libraryItems.observe(viewLifecycleOwner, {
             for (album in it) {
-                if (album.id==albumItems.id) {
-                    albumItems.inLibrary=true
+                if (album.id == albumItems.id) {
+                    albumItems.inLibrary = true
                     break
                 }
             }

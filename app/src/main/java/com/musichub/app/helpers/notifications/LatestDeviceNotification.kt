@@ -28,7 +28,7 @@ class LatestDeviceNotification(base: Context?) :
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {
         val notificationChannel =
-            NotificationChannel(Channel_Id, Channel_Name, NotificationManager.IMPORTANCE_MAX)
+            NotificationChannel(Channel_Id, Channel_Name, NotificationManager.IMPORTANCE_HIGH)
         notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         manager!!.createNotificationChannel(notificationChannel)
     }

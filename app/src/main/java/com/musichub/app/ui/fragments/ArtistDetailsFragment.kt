@@ -232,7 +232,11 @@ class ArtistDetailsFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
         viewModel.getAllAlbums(args.artistId,0)
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner,{
             offsetAll = it.offset + 50
-            for(album in it.items) {
+            Log.d("artistDetailsOffset", offsetAll.toString())
+            if (offsetAll <= 100) {
+                viewModel.getAllAlbums(args.artistId, offsetAll)
+            }
+            for (album in it.items) {
                 if (!contains(
                         album,
                         albumsAll

@@ -212,6 +212,11 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
         })
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner, {
             offsetAll = it.offset + 50
+            if (offsetAll <= 100) {
+                for (artist in followedArtistsId) {
+                    viewModel.getAllAlbums(artist.artistId, offsetAll)
+                }
+            }
             for (album in it.items) {
                 if (!contains(album, albumsAll) && !isVariousArtist(album)) {
                     albumsAll.add(album)

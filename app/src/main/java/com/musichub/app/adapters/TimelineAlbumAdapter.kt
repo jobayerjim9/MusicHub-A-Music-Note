@@ -23,6 +23,9 @@ import android.widget.Toast
 import com.musichub.app.helpers.listeners.OnArtistClick
 import java.lang.Exception
 import java.lang.IndexOutOfBoundsException
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class TimelineAlbumAdapter(
@@ -42,13 +45,22 @@ class TimelineAlbumAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
+        val format = SimpleDateFormat("yyyy-MM-dd")
+        val releaseDate = Calendar.getInstance()
+        releaseDate.time = format.parse(item.release_date!!)!!
+        val now = Calendar.getInstance()
+        if (releaseDate.after(now)) {
+            holder.binding?.comingSoonLabel?.visibility = View.VISIBLE
+        } else {
+            holder.binding?.comingSoonLabel?.visibility = View.GONE
+        }
         if (items[position].inLibrary!!) {
             holder.binding?.cardColor = "#4E1E75"
             holder.binding?.libraryText?.setTextColor(Color.parseColor("#FFFFFF"))
             holder.binding?.libraryText?.text = "✔ Library"
             holder.binding?.addToLibrary?.setOnClickListener {
                 listener.onRemoveFromLibrary(item)
-                items[position].inLibrary=false
+                items[position].inLibrary = false
                 notifyItemChanged(position)
             }
         }
