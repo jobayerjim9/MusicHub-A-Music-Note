@@ -250,6 +250,7 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
             })
     }
     fun getFeaturedAlbums(id:String,offset:Int,type:Int = 0) {
+
         repo.getAlbums(id,"appears_on",offset)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -259,6 +260,7 @@ class ArtistViewModel @Inject constructor(private val repo: MusicHubRepositories
                 }
 
                 override fun onNext(t: SpotifyAlbum) {
+                    Log.d("callingFeatured", id)
                     if (type==100) {
                         for (item in t.items) {
                             item.artists.add(

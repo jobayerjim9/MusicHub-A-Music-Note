@@ -104,23 +104,43 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
                 val total = layoutManager!!.itemCount
                 val currentLastItem = layoutManager!!.findLastVisibleItemPosition()
-                if (currentLastItem == total - 1) {
+                if (currentLastItem >= total - 1 && albumsAll.size > 0) {
                     if (binding.tabLayout.selectedTabPosition == 0) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getAllAlbums(artist.artistId, offsetAll)
+                        for (followed in followedArtistsId) {
+                            viewModel.getFeaturedAlbums(
+                                followed.artistId,
+                                offsetFeatured,
+                                100
+                            )
+                            viewModel.getSingleAlbums(
+                                followed.artistId,
+                                offsetSingle
+                            )
+                            viewModel.getOnlyAlbums(followed.artistId, offsetOnly)
                         }
 
                     } else if (binding.tabLayout.selectedTabPosition == 1) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getSingleAlbums(artist.artistId, offsetSingle)
+                        for (followed in followedArtistsId) {
+                            viewModel.getSingleAlbums(
+                                followed.artistId,
+                                offsetSingle
+                            )
                         }
+
                     } else if (binding.tabLayout.selectedTabPosition == 2) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getOnlyAlbums(artist.artistId, offsetOnly)
+                        for (followed in followedArtistsId) {
+                            viewModel.getOnlyAlbums(
+                                followed.artistId,
+                                offsetOnly
+                            )
                         }
                     } else if (binding.tabLayout.selectedTabPosition == 3) {
-                        for (artist in followedArtistsId) {
-                            viewModel.getFeaturedAlbums(artist.artistId, offsetFeatured)
+                        for (followed in followedArtistsId) {
+                            viewModel.getFeaturedAlbums(
+                                followed.artistId,
+                                offsetOnly,
+                                100
+                            )
                         }
                     }
                 }
@@ -154,41 +174,37 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
             }
         })
         viewModel.followedArtist.observe(viewLifecycleOwner, {
-            if (it.isNotEmpty()) {
+            if (!it.isNullOrEmpty()) {
                 binding.tabLayout.visibility = View.VISIBLE
                 binding.noItemText.visibility = View.GONE
-            } else {
-                albumsAll.clear()
-                albumsSingle.clear()
-                albumsFeatured.clear()
-                albumsSingle.clear()
-                binding.tabLayout.visibility = View.GONE
-                if (binding.swipeRefresh.isRefreshing) {
-                    binding.swipeRefresh.isRefreshing = false
+
+                for (artist in it) {
+                    if (!contains(artist)) {
+                        followedArtistsId.add(artist)
+                    }
                 }
-                binding.noItemText.visibility = View.VISIBLE
-            }
-            for (artist in it) {
-                if (!contains(artist)) {
-                    followedArtistsId.add(artist)
+                followedArtistsId.shuffle()
+                for (followed in followedArtistsId) {
+                    viewModel.getFeaturedAlbums(
+                        followed.artistId,
+                        0,
+                        100
+                    )
+                    viewModel.getSingleAlbums(
+                        followed.artistId,
+                        0
+                    )
+                    viewModel.getOnlyAlbums(followed.artistId, 0)
                 }
-            }
-            followedArtistsId.shuffle()
-            for (artist in followedArtistsId) {
-                viewModel.getAllAlbums(artist.artistId, 0)
-                viewModel.getSingleAlbums(artist.artistId, 0)
-                viewModel.getOnlyAlbums(artist.artistId, 0)
-                viewModel.getFeaturedAlbums(artist.artistId, 0, 100)
-            }
-            albumAdapterAll = TimelineAlbumAdapter(
-                requireContext(),
-                albumsAll,
-                followedArtistsId,
-                libraryItems,
-                this, this
-            )
-            binding.albumRecycler.adapter = albumAdapterAll
-            albumAdapterSingle = TimelineAlbumAdapter(
+                albumAdapterAll = TimelineAlbumAdapter(
+                    requireContext(),
+                    albumsAll,
+                    followedArtistsId,
+                    libraryItems,
+                    this, this
+                )
+                binding.albumRecycler.adapter = albumAdapterAll
+                albumAdapterSingle = TimelineAlbumAdapter(
                 requireContext(),
                 albumsSingle,
                 followedArtistsId,
@@ -202,21 +218,27 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                 libraryItems,
                 this, this
             )
-            albumAdapterFeatured = TimelineAlbumAdapter(
-                requireContext(),
-                albumsFeatured,
-                followedArtistsId,
-                libraryItems,
-                this, this
-            )
+                albumAdapterFeatured = TimelineAlbumAdapter(
+                    requireContext(),
+                    albumsFeatured,
+                    followedArtistsId,
+                    libraryItems,
+                    this, this
+                )
+            } else {
+                albumsAll.clear()
+                albumsSingle.clear()
+                albumsFeatured.clear()
+                albumsSingle.clear()
+                binding.tabLayout.visibility = View.GONE
+                if (binding.swipeRefresh.isRefreshing) {
+                    binding.swipeRefresh.isRefreshing = false
+                }
+                binding.noItemText.visibility = View.VISIBLE
+            }
         })
         viewModel.spotifyAlbumsAll.observe(viewLifecycleOwner, {
             offsetAll = it.offset + 50
-            if (offsetAll <= 100) {
-                for (artist in followedArtistsId) {
-                    viewModel.getAllAlbums(artist.artistId, offsetAll)
-                }
-            }
             for (album in it.items) {
                 if (!contains(album, albumsAll) && !isVariousArtist(album)) {
                     albumsAll.add(album)
@@ -250,6 +272,9 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                 if (!contains(album, albumsSingle)) {
                     albumsSingle.add(album)
                 }
+                if (!contains(album, albumsAll)) {
+                    albumsAll.add(album)
+                }
                 val splitDate = album.release_date?.split("-")
                 try {
                     album.formattedDate = splitDate!![2] + "/" + splitDate[1] + "/" + splitDate[0]
@@ -264,16 +289,24 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                 }
             }
             viewModel.sortWith(albumsSingle)
-
+            viewModel.sortWith(albumsAll)
+            albumAdapterAll.notifyDataSetChanged()
             if (!emptyFollowed) {
                 albumAdapterSingle.notifyDataSetChanged()
+            }
+            if (binding.swipeRefresh.isRefreshing) {
+                binding.swipeRefresh.isRefreshing = false
             }
         })
         viewModel.spotifyAlbumsOnly.observe(viewLifecycleOwner, {
             offsetOnly = it.offset + 50
+
             for (album in it.items) {
                 if (!contains(album, albumsOnly)) {
                     albumsOnly.add(album)
+                }
+                if (!contains(album, albumsAll)) {
+                    albumsAll.add(album)
                 }
                 val splitDate = album.release_date?.split("-")
                 try {
@@ -290,14 +323,21 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                 }
             }
             viewModel.sortWith(albumsOnly)
+            viewModel.sortWith(albumsAll)
 
+
+            albumAdapterAll.notifyDataSetChanged()
 
             if (!emptyFollowed) {
                 albumAdapterAlbum.notifyDataSetChanged()
             }
+            if (binding.swipeRefresh.isRefreshing) {
+                binding.swipeRefresh.isRefreshing = false
+            }
         })
         viewModel.spotifyAlbumsFeatured.observe(viewLifecycleOwner, {
             offsetFeatured = it.offset + 50
+
             for (album in it.items) {
                 val splitDate = album.release_date?.split("-")
                 try {
@@ -311,17 +351,23 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
                         album.inLibrary = true
                     }
                 }
-
+                if (!contains(album, albumsAll) && !isVariousArtist(album)) {
+                    albumsAll.add(album)
+                }
 
                 if (!contains(album, albumsFeatured) && !isVariousArtist(album)) {
                     albumsFeatured.add(album)
                 }
 
             }
-
+            viewModel.sortWith(albumsAll)
             viewModel.sortWith(albumsFeatured)
+            albumAdapterAll.notifyDataSetChanged()
             if (!emptyFollowed) {
                 albumAdapterFeatured.notifyDataSetChanged()
+            }
+            if (binding.swipeRefresh.isRefreshing) {
+                binding.swipeRefresh.isRefreshing = false
             }
         })
         viewModel.libraryItems.observe(viewLifecycleOwner, {
@@ -429,14 +475,8 @@ class TimelineFragment : Fragment(), RecyclerViewItemClick, OnArtistClick {
     }
 
     private fun refreshTimeline() {
-        albumsAll.clear()
-        albumsOnly.clear()
-        albumsSingle.clear()
-        albumsFeatured.clear()
-        followedArtistsId.clear()
         viewModel.getLibraryItems()
         viewModel.getFollowedArtist()
-
     }
 
     override fun onAddToLibrary(albumItems: AlbumItems) {
