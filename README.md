@@ -7,3 +7,4 @@ A Music Browsing App Using Spotify &amp; Genius Api
 # How to build
 - Add google-service.json
 - Add all required credentials from Spotify API & Genius API into ApiConstants.kt
+
