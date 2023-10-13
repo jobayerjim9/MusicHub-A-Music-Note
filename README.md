@@ -1,12 +1,13 @@
 # MusicHub-A-Music-Note
 A Music Browsing App Using Spotify &amp; Genius Api
 
-- This app combine data from spotify api & genius api
-- Do a tons of feature for music lover
+- This app combines data from Spotify API and Genius API
+- Do tons of features for music lover
 
 # How to build
-- Add google-service.json
+- Replace google-service.json
 - Add all required credentials from Spotify API & Genius API into ApiConstants.kt
 
-# Developed at end of 2021 make sure everything compatible 
+
+# Developed at the end of 2021 to make sure everything is compatible 
 
