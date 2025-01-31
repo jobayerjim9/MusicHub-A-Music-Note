@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "45134490491",
+    "project_id": "modernandroidapp",
+    "storage_bucket": "modernandroidapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45134490491:android:14d342a72c950681c9abde",
+        "android_client_info": {
+          "package_name": "com.jobaer.example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-bTJ4Z0QweFfFCxRCc0OiqOAF-ZtSvac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45134490491:android:0ac843573ce75098c9abde",
+        "android_client_info": {
+          "package_name": "com.musichub.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-bTJ4Z0QweFfFCxRCc0OiqOAF-ZtSvac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

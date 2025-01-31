@@ -1,0 +1,32 @@
+workflows:
+  beta_distribution:
+    name: Beta Build and Distribution
+    environment:
+      vars:
+        # Firebase App Distribution token and App ID are fetched from your environment variables
+        FIREBASE_TOKEN: $FIREBASE_TOKEN
+        FIREBASE_APP_ID: $FIREBASE_APP_ID
+    scripts:
+      - name: Clean and Build Debug APK
+        script: |
+          ./gradlew clean assembleDebug
+      - name: Run Tests
+        script: |
+          ./gradlew testDebug
+      - name: Build APK (Beta)
+        script: |
+          ./gradlew assembleDebug
+      - name: Distribute via Firebase App Distribution
+        script: |
+          # Install Firebase CLI if not already available
+          npm install -g firebase-tools
+          firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk \
+            --app $FIREBASE_APP_ID \
+            --testers "kengyap@upm.edu.my" \
+            --token $FIREBASE_TOKEN \
+            --release-notes "Automated debug build from Codemagic"
+    artifacts:
+      - app/build/outputs/apk/debug/app-debug.apk
+    publishing:
+      scripts:
+        - echo "Beta debug build and distribution completed successfully."
