@@ -3,10 +3,19 @@ workflows:
     name: Beta Build and Distribution
     environment:
       groups:
-        - tokens  # This group now includes BASE64_FIREBASE_KEY
+        - tokens  # This group now includes BASE64_FIREBASE_KEY and your secure variables
       vars:
         FIREBASE_APP_ID: $FIREBASE_APP_ID
+        FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID  # Make sure this variable is set in your Codemagic settings
     scripts:
+      - name: Debug Environment Variables
+        script: |
+          echo "FIREBASE_APP_ID: ${FIREBASE_APP_ID}"
+          echo "FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}"
+          # Print only a part of the BASE64_FIREBASE_KEY for verification
+          KEY_HEAD=$(echo "$BASE64_FIREBASE_KEY" | head -c 10)
+          KEY_TAIL=$(echo "$BASE64_FIREBASE_KEY" | tail -c 10)
+          echo "BASE64_FIREBASE_KEY: ${KEY_HEAD}...${KEY_TAIL}"
       - name: Decode Firebase Service Account Key
         script: |
           echo "$BASE64_FIREBASE_KEY" | base64 --decode > firebase-service-account.json
@@ -20,6 +29,9 @@ workflows:
       - name: Build APK (Beta)
         script: |
           ./gradlew assembleDebug
+      - name: Set Firebase Project
+        script: |
+          firebase use --project $FIREBASE_PROJECT_ID
       - name: Distribute via Firebase App Distribution
         script: |
           npm install -g firebase-tools --force
