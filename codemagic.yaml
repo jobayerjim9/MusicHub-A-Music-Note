@@ -2,6 +2,8 @@ workflows:
   beta_distribution:
     name: Beta Build and Distribution
     environment:
+      groups:
+        - tokens
       vars:
         # Firebase App Distribution token and App ID are fetched from your environment variables
         FIREBASE_TOKEN: $FIREBASE_TOKEN
