@@ -3,12 +3,14 @@ workflows:
     name: Beta Build and Distribution
     environment:
       groups:
-        - tokens
+        - tokens  # This group now includes BASE64_FIREBASE_KEY
       vars:
-        # Firebase App Distribution token and App ID are fetched from your environment variables
-        FIREBASE_TOKEN: $FIREBASE_TOKEN
         FIREBASE_APP_ID: $FIREBASE_APP_ID
     scripts:
+      - name: Decode Firebase Service Account Key
+        script: |
+          echo "$BASE64_FIREBASE_KEY" | base64 --decode > firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/firebase-service-account.json"
       - name: Clean and Build Debug APK
         script: |
           ./gradlew clean assembleDebug
@@ -20,12 +22,10 @@ workflows:
           ./gradlew assembleDebug
       - name: Distribute via Firebase App Distribution
         script: |
-          # Install Firebase CLI if not already available
-          npm install -g firebase-tools
+          npm install -g firebase-tools --force
           firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk \
             --app $FIREBASE_APP_ID \
             --testers "kengyap@upm.edu.my" \
-            --token $FIREBASE_TOKEN \
             --release-notes "Automated debug build from Codemagic"
     artifacts:
       - app/build/outputs/apk/debug/app-debug.apk
