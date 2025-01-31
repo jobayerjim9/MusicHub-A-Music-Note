@@ -4,9 +4,6 @@ workflows:
     environment:
       groups:
         - tokens  # This group now includes BASE64_FIREBASE_KEY and your secure variables
-      vars:
-        FIREBASE_APP_ID: $FIREBASE_APP_ID
-        FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID  # Make sure this variable is set in your Codemagic settings
     scripts:
       - name: Debug Environment Variables
         script: |
